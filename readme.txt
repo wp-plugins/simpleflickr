@@ -41,9 +41,11 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 == Release Notes ==
 
 *Version 1.1*:
+
 *	Added default parameters to options configuration page
 
 *Version 1.0*:
+
 *	Initial release tested only on version 2.1 of Wordpress
 *	Using version 1.8 of SimpleViewer
 *	Using a modified version 1.1 of Flickrviewer
@@ -60,11 +62,11 @@ be able to a simpleviewer object to you content with the <simpleflickr> tag.
 
 Here is an example with minimal options:
   
-	`<simpleflickr set="72157594408754918" />`
+`<simpleflickr set="72157594408754918" />`
 
 Here is an example with all custom options:
 
-	`<simpleflickr width="100%" height="800" bgcolor="#FFFFFF" quality="best" navposition="bottom" title="Testing Demo" set="72157594408754918" maximagewidth="500" maximageheight="300" textcolor="0x000000" framecolor="0xBBBBBB" framewidth="10" stagepadding="40" thumbnailcolumns="3" thumbnailrows="3" enablerightclickopen="false" />`
+`<simpleflickr width="100%" height="800" bgcolor="#FFFFFF" quality="best" navposition="bottom" title="Testing Demo" set="72157594408754918" maximagewidth="500" maximageheight="300" textcolor="0x000000" framecolor="0xBBBBBB" framewidth="10" stagepadding="40" thumbnailcolumns="3" thumbnailrows="3" enablerightclickopen="false" />`
 
 == Available Tag Attributes ==
 
@@ -96,8 +98,8 @@ The following are the option settings available:
 
 Special thanks to the developers and community around these two great pieces of software:
 
-	SimpleViewer by Airtight <http://www.airtightinteractive.com/simpleviewer/>
-	Flickrviewer by Mark Sweeting <http://www.sweeting.org/mark/flickrviewer/>
+SimpleViewer by Airtight <http://www.airtightinteractive.com/simpleviewer/>
+Flickrviewer by Mark Sweeting <http://www.sweeting.org/mark/flickrviewer/>
 
 == Copyright == 
 
