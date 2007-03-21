@@ -98,11 +98,12 @@ The following are the option settings available:
 
 Special thanks to the developers and community around these two great pieces of software:
 
-SimpleViewer by Airtight <http://www.airtightinteractive.com/simpleviewer/>
-Flickrviewer by Mark Sweeting <http://www.sweeting.org/mark/flickrviewer/>
+[SimpleViewer](http://www.airtightinteractive.com/simpleviewer/ "Simpleviewer") by Airtight
+
+[Flickrviewer](http://www.sweeting.org/mark/flickrviewer/ "Flickrviewer") by Mark Sweeting
 
 == Copyright == 
 
-Copyright (c) 2007
+Copyright (c) 2007 
 Released under the GPL license
 <http://www.gnu.org/licenses/gpl.txt>
