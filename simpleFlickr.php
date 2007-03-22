@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: simpleFlickr
-Plugin URI: http://wordpress.org/#
+Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 1.1
+Version: 1.2
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
@@ -14,7 +14,7 @@ http://www.gnu.org/licenses/gpl.txt
 
 // Global Variables
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
-define('SIMPLEFLICKR_VERSION', "1.1");
+define('SIMPLEFLICKR_VERSION', "1.2");
 define('SIMPLEFLICKR_DIR', "simpleFlickr");
 $simpleflickr_request_type = "";
 

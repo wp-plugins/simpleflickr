@@ -4,7 +4,7 @@
 /////////////////////////////////////////////////////////////////////////
 /* 
 by Josh Gerdes
-Version 1.1 - 15 Mar 2007
+Version 1.2 - 22 Mar 2007
 
 This version of FlickrViewer was modified to integrate with the simpleFlickr plugin.
 The modifications allows configuration parameters to be retrieved from the wordpress 
@@ -107,7 +107,7 @@ if(!empty($array[8]))	$thumbnailcolumns = $array[8];
 if(!empty($array[9]))	$thumbnailrows = $array[9];
 if(!empty($array[10]))	$enablerightclickopen = $array[10];
 if(!empty($array[11]))	$title = $array[11];
- 
+
 /////////////////////////////////////////////////////////////////////////
 // End of configuration additions for simpleFlickr plugin integration
 /////////////////////////////////////////////////////////////////////////
@@ -287,15 +287,18 @@ function endElement($parser, $name){ }
 // construct the flickr api request
 $url = "http://www.flickr.com/services/rest/?method=flickr.photosets.getPhotos&api_key=$apikey&photoset_id=$setid";
 
+/////////////////////////////////////////////////////////////////////////
+// SIMPLEFLICKR: Changed to not use fopen, instead use curl
+/////////////////////////////////////////////////////////////////////////
 // off we go!
-if($handle = @fopen("$url", "rb"))
-{
-   while (!feof($handle)) {
-      $xmlin .= fread($handle, 8192);
-   }
-   fclose($handle);
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$xmlin = curl_exec($ch);
+curl_close($ch);
 
-   // parse the flickr response
+// parse the flickr response
+ if((is_string($xmlin) == true) && (strlen($xmlin) > 0)) 
+ {
    $xml_parser = xml_parser_create();
    xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, true);
    xml_set_element_handler($xml_parser, "startElement", "endElement");
@@ -376,7 +379,7 @@ if($ttl)
    // cache the results so we don't need to keep generating it.
    $sData = serialize(array($now, $xmlout));
 
-   if (!$handle = @fopen($cache, 'w')) {
+if (!$handle = @fopen($cache, 'w')) {
       if($debug)
       {
          echo "Error: Cannot open $cache for writing.\n";
