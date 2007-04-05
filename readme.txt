@@ -4,7 +4,7 @@ Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Tags: images, flickr, simpleviewer
 Requires at least: 2.0
 Tested up to: 2.1.2
-Stable tag: 1.2
+Stable tag: 1.2.1
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -18,10 +18,11 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 
 == Installation ==
 
-1.	Extract the `simpleFlickr` directory and all of its contents into your `wp-content/plugins/ directory`.
+1.	Extract all the contents of the plugin archive into your `wp-content/plugins/simpleFlickr` directory.
 1.	Go to your wordpress admin pages and click on `Plugins` and activate the plugin called `simpleFlickr`.
 1.	Go to your wordpress admin and click on `Options` then `simpleFlickr`.
 1.	Set your configuration option values and click `update options` to save.
+1. Add `<simpleflickr>` tag to your page or post with the set attribute defined.  (Please see *Usage* section for more details.)
 
 == Frequently Asked Questions ==
 
@@ -39,6 +40,11 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 2. The options configuration page for the SimpleFlickr plugin.
 
 == Release Notes ==
+
+*Version 1.2.1*:
+
+*	Modified flickrviewer to use check for curl or fopen and use either if available
+*	Updated instructions to explain the installation in more detail
 
 *Version 1.2*:
 
@@ -62,7 +68,7 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 == Usage ==
 
 After the plugin has been installed, activated, and the configuration options have been set you will 
-be able to a simpleviewer object to you content with the <simpleflickr> tag.  
+be able to a simpleviewer object to you content with the `<simpleflickr>` tag.  
 
 Here is an example with minimal options:
   

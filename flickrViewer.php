@@ -4,7 +4,7 @@
 /////////////////////////////////////////////////////////////////////////
 /* 
 by Josh Gerdes
-Version 1.2 - 22 Mar 2007
+Version 1.2.1 - 05 Apr 2007
 
 This version of FlickrViewer was modified to integrate with the simpleFlickr plugin.
 The modifications allows configuration parameters to be retrieved from the wordpress 
@@ -287,16 +287,31 @@ function endElement($parser, $name){ }
 // construct the flickr api request
 $url = "http://www.flickr.com/services/rest/?method=flickr.photosets.getPhotos&api_key=$apikey&photoset_id=$setid";
 
-/////////////////////////////////////////////////////////////////////////
-// SIMPLEFLICKR: Changed to not use fopen, instead use curl
-/////////////////////////////////////////////////////////////////////////
-// off we go!
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$xmlin = curl_exec($ch);
-curl_close($ch);
+//////////////////////////////////////////////////////////////////////////////
+// SIMPLEFLICKR: Changed to check if curl or fopen are available and use the one that is
+//////////////////////////////////////////////////////////////////////////////
 
-// parse the flickr response
+// Check to see if curl or fopen are available to retrieve flickr data
+if( function_exists('curl_init') )
+{
+	// Curl is available so use it
+	$ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	$xmlin = curl_exec($ch);
+	curl_close($ch);
+}
+else if(function_exists('fopen'))
+{
+	// fopen is available so use it instead
+	if($handle = @fopen("$url", "rb"))
+	{
+		   while (!feof($handle)) {
+		      $xmlin .= fread($handle, 8192);
+		   }
+		   fclose($handle);
+	 }
+}
+ // parse the flickr response
  if((is_string($xmlin) == true) && (strlen($xmlin) > 0)) 
  {
    $xml_parser = xml_parser_create();

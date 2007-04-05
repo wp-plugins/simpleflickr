@@ -4,7 +4,7 @@ Plugin Name: simpleFlickr
 Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 1.2
+Version: 1.2.1
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
