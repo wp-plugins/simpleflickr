@@ -4,7 +4,7 @@ Plugin Name: simpleFlickr
 Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 1.2.1
+Version: 1.2.2
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
@@ -13,9 +13,8 @@ http://www.gnu.org/licenses/gpl.txt
 */ 
 
 // Global Variables
+define('SIMPLEFLICKR_VERSION', "1.2.2");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
-define('SIMPLEFLICKR_VERSION', "1.2");
-define('SIMPLEFLICKR_DIR', "simpleFlickr");
 $simpleflickr_request_type = "";
 
 // Main function
@@ -32,11 +31,15 @@ function simpleflickr_parse_tags ($match) {
 						'][/SIMPLEFLICKR]',
 						'[simpleflickr',
 						'][/simpleflickr]',
+						'[simpleFlickr',
+						'][/simpleFlickr]',
 						'/]',
 						'<SIMPLEFLICKR',
 						'></SIMPLEFLICKR>',
 						'<simpleflickr',
 						'></simpleflickr>',
+						'<simpleFlickr',
+						'></simpleFlickr>',
 						'/>',
 						'\n',
 						'<br>',
@@ -120,6 +123,7 @@ function simpleflickr_build_script($atts) {
 
 	// Combine the simpleviewer parameters
 	$params[] = $set;
+	$params[] = $group;
 	$params[] = $navposition;
 	$params[] = $maximagewidth;
 	$params[] = $maximageheight;
@@ -131,6 +135,7 @@ function simpleflickr_build_script($atts) {
 	$params[] = $thumbnailrows;
 	$params[] = $enablerightclickopen;
 	$params[] = $title;
+	
 	
 	$parameters = join(",", $params);
 	
@@ -193,7 +198,7 @@ function simpleflickr_build_feed($atts) {
 }
 
 function get_plugin_uri() {
-	$uri = get_settings('siteurl') . '/wp-content/plugins/'. SIMPLEFLICKR_DIR .'/';
+	$uri = get_settings('siteurl') . '/wp-content/plugins/'. basename(dirname(__FILE__)) .'/';
 	return $uri;
 }
 
@@ -217,7 +222,8 @@ if (preg_match("/(\/\?feed=|\/feed)/i",$_SERVER['REQUEST_URI'])) {
 
 // Apply all over except the admin section
 if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') === false ) {
-	add_action('template_redirect','simpleflickrDoObjectStart');
+	//add_action('template_redirect','simpleflickrDoObjectStart');
+	add_filter('the_content','simpleflickr');
 }
 
 // Trigger Function

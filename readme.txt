@@ -3,8 +3,8 @@ Contributors: joshgerdes
 Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Tags: images, flickr, simpleviewer
 Requires at least: 2.0
-Tested up to: 2.1.2
-Stable tag: 1.2.1
+Tested up to: 2.1.3
+Stable tag: 1.2.2
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -22,7 +22,7 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 1.	Go to your wordpress admin pages and click on `Plugins` and activate the plugin called `simpleFlickr`.
 1.	Go to your wordpress admin and click on `Options` then `simpleFlickr`.
 1.	Set your configuration option values and click `update options` to save.
-1. Add `<simpleflickr>` tag to your page or post with the set attribute defined.  (Please see *Usage* section for more details.)
+1. Add `<simpleflickr>` tag to your page or post with the set or group attribute defined.  (Please see *Usage* section for more details.)
 
 == Frequently Asked Questions ==
 
@@ -40,6 +40,13 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 2. The options configuration page for the SimpleFlickr plugin.
 
 == Release Notes ==
+
+*Version 1.2.2*:
+
+*	Fixed compatibility with 'All in One SEO Pack' Plugin
+*	Fixed plugin directory name dependency.  Directory can now be named anything.
+*   Added simpleFlickr tag version to plugin. Now SIMPLEFLICKR, simpleflickr, and simpleFlickr available. 
+*   Added group option.  Now can display a selection photos from a group.  The 'group' attribute takes precedence over 'set' attribute.
 
 *Version 1.2.1*:
 
@@ -82,7 +89,8 @@ Here is an example with all custom options:
 
 The following are the attributes available for the tag:
 
-* 	**set**: The set id of the flickr set you would like to display. (Required)
+* 	**set**: The set id of the flickr set you would like to display. (Set or Group Required)
+* 	**group**: The group id of the flickr group you would like to display. Go to <http://www.mentalaxis.com/idfindr/> to find a group id needed for this field. (Set or Group Required)
 * 	**width**: The width of the flash object (optional). Default is '100%'.
 * 	**height**: The height of the flash object (optional). Default is '800'.
 * 	**bgcolor**: The background color of the flash object (optional). Default is '#FFFFFF'.

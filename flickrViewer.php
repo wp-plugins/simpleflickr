@@ -4,7 +4,7 @@
 /////////////////////////////////////////////////////////////////////////
 /* 
 by Josh Gerdes
-Version 1.2.1 - 05 Apr 2007
+Version 1.2.2 - 22 Apr 2007
 
 This version of FlickrViewer was modified to integrate with the simpleFlickr plugin.
 The modifications allows configuration parameters to be retrieved from the wordpress 
@@ -96,17 +96,18 @@ $title = $simpleFlickrOptionsDB['TITLE'];
 /* Had to send as an array of parameters so multiple parameters would get picked up. */
 $array = split(",", $_GET{parameters});
 if(!empty($array[0]))	$setid = $array[0];
-if(!empty($array[1]))	$navposition = $array[1];
-if(!empty($array[2]))	$maximagewidth = $array[2];
-if(!empty($array[3]))	$maximageheight = $array[3];
-if(!empty($array[4]))	$textcolor = $array[4];
-if(!empty($array[5]))	$framecolor = $array[5];
-if(!empty($array[6]))	$framewidth = $array[6];
-if(!empty($array[7]))	$stagepadding = $array[7];
-if(!empty($array[8]))	$thumbnailcolumns = $array[8];
-if(!empty($array[9]))	$thumbnailrows = $array[9];
-if(!empty($array[10]))	$enablerightclickopen = $array[10];
-if(!empty($array[11]))	$title = $array[11];
+if(!empty($array[1]))	$group = $array[1];
+if(!empty($array[2]))	$navposition = $array[2];
+if(!empty($array[3]))	$maximagewidth = $array[3];
+if(!empty($array[4]))	$maximageheight = $array[4];
+if(!empty($array[5]))	$textcolor = $array[5];
+if(!empty($array[6]))	$framecolor = $array[6];
+if(!empty($array[7]))	$framewidth = $array[7];
+if(!empty($array[8]))	$stagepadding = $array[8];
+if(!empty($array[9]))	$thumbnailcolumns = $array[9];
+if(!empty($array[10]))	$thumbnailrows = $array[10];
+if(!empty($array[11]))	$enablerightclickopen = $array[11];
+if(!empty($array[12]))	$title = $array[12];
 
 /////////////////////////////////////////////////////////////////////////
 // End of configuration additions for simpleFlickr plugin integration
@@ -272,7 +273,17 @@ function startElement($parser, $name, $attrs)
    global $photos, $userurl;
    if ($name == "PHOTO")
    {
-      $photos[] = array("{$attrs['SERVER']}/{$attrs['ID']}_{$attrs['SECRET']}", $attrs['TITLE'], $userurl . $attrs['ID']);
+      ////////////////////////////////////////////////////////////////////////////////
+	  // SIMPLEFLICKR: Added group so must return data is different depending on which request 
+	  ////////////////////////////////////////////////////////////////////////////////
+	  if ($group) 
+	  {
+		$photos[] = array("{$attrs['SERVER']}/{$attrs['ID']}_{$attrs['SECRET']}", $attrs['TITLE'], 'http://www.flickr.com/photos/'.$attrs['OWNER'].'/' . $attrs['ID']);
+	  } 
+	  else 
+	  {
+		$photos[] = array("{$attrs['SERVER']}/{$attrs['ID']}_{$attrs['SECRET']}", $attrs['TITLE'], $userurl . $attrs['ID']);
+	  }
    }
    elseif ($name == "ERR")
    {
@@ -284,8 +295,18 @@ function startElement($parser, $name, $attrs)
 // xml endElement handler - not needed!
 function endElement($parser, $name){ }
 
-// construct the flickr api request
-$url = "http://www.flickr.com/services/rest/?method=flickr.photosets.getPhotos&api_key=$apikey&photoset_id=$setid";
+//////////////////////////////////////////////////////
+// SIMPLEFLICKR: Add group the contruction of the request
+//////////////////////////////////////////////////////
+// construct the flickr api request\
+if ($group != null) 
+{
+	$url = "http://www.flickr.com/services/rest/?method=flickr.groups.pools.getPhotos&api_key=$apikey&group_id=$group";
+} 
+else 
+{
+	$url = "http://www.flickr.com/services/rest/?method=flickr.photosets.getPhotos&api_key=$apikey&photoset_id=$setid";
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // SIMPLEFLICKR: Changed to check if curl or fopen are available and use the one that is
@@ -342,7 +363,7 @@ if(!count($photos))
 
 /* Generate the XML OUT */
 /////////////////////////////////////////////////////////////////////////
-// SIMPLEFLICKR: Added navposition value from plugin parameters
+// SIMPLEFLICKR: Added option values from plugin parameters
 /////////////////////////////////////////////////////////////////////////
 $xmlout = '<?xm' . 'l version="1.0" encoding="UTF-8"?>';
 $xmlout .= '<!-- Last updated: ' . date("r") . ' -->';
