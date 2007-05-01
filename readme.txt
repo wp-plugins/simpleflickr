@@ -1,10 +1,10 @@
 === SimpleFlickr ===
 Contributors: joshgerdes
 Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
-Tags: images, flickr, simpleviewer
+Tags: images, flickr, simpleviewer, gallery
 Requires at least: 2.0
 Tested up to: 2.1.3
-Stable tag: 1.2.2
+Stable tag: 2.0
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -19,8 +19,9 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 == Installation ==
 
 1.	Extract all the contents of the plugin archive into your `wp-content/plugins/simpleFlickr` directory.
-1.	Go to your wordpress admin pages and click on `Plugins` and activate the plugin called `simpleFlickr`.
-1.	Go to your wordpress admin and click on `Options` then `simpleFlickr`.
+1.	Go to your wordpress admin pages and click on `Plugins` and activate the plugin called `SimpleFlickr`.
+1.	Go to your wordpress admin and click on `Options` then `SimpleFlickr`.
+1. Following the instructions to authorize the plugin with flickr. (You only do this once initially.)
 1.	Set your configuration option values and click `update options` to save.
 1. Add `<simpleflickr>` tag to your page or post with the set or group attribute defined.  (Please see *Usage* section for more details.)
 
@@ -37,9 +38,20 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 == Screenshots ==
 
 1. An Example of how SimpleFlickr displays in a page or post.
-2. The options configuration page for the SimpleFlickr plugin.
 
 == Release Notes ==
+
+*Version 2.0*:
+
+*  Revamped Data calls to use phpFlickr library (version 2.1.0).
+*  Combined code into one class and php page.
+*  Removed use of flickrviewer.
+*  Upgraded to SWFObject 1.5 and added express install feature.
+*  Added user authentication so private photos can now be displayed.
+*  Added ability to display photos from a given group.
+*  Added ability to display recent user photos.
+*  Added ability to show/hide image caption and image link in simpleviewer.
+*  Fixed thumbnailrow and thumbnailcolumn zero settings so they work now.
 
 *Version 1.2.2*:
 
@@ -67,21 +79,28 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 *	Using version 1.8 of SimpleViewer
 *	Using a modified version 1.1 of Flickrviewer
 
-== Requirements ==
+== Upgrading ==
 
-* 	Wordpress 2.x or higher <http://wordpress.com/>
-* 	A Flickr API Key <http://www.flickr.com/services/api/keys/>
+The easiest way to upgrade to version 2.0 from previous versions is to deactivate the plugin in wordpress and delete the plugin folder from your web server.  Once the new plugin files have been uploaded and you have activated the plugin in wordpress then you have authorized the new plugin with flickr before you can use the plugin.  It is also suggested to update your options to resave the values in the database to make sure you have all the latest option values saved.
 
 == Usage ==
 
 After the plugin has been installed, activated, and the configuration options have been set you will 
 be able to a simpleviewer object to you content with the `<simpleflickr>` tag.  
 
-Here is an example with minimal options:
+Here is an example to show a set:
   
 `<simpleflickr set="72157594408754918" />`
 
-Here is an example with all custom options:
+Here is an example to show a group:
+  
+`<simpleflickr group="47755705@N00" />`
+
+Here is an example to show user's recent photos:
+  
+`<simpleflickr showrecent="true" />`
+
+Here is an example with custom options:
 
 `<simpleflickr width="100%" height="800" bgcolor="#FFFFFF" quality="best" navposition="bottom" title="Testing Demo" set="72157594408754918" maximagewidth="500" maximageheight="300" textcolor="0x000000" framecolor="0xBBBBBB" framewidth="10" stagepadding="40" thumbnailcolumns="3" thumbnailrows="3" enablerightclickopen="false" />`
 
@@ -89,8 +108,12 @@ Here is an example with all custom options:
 
 The following are the attributes available for the tag:
 
+*  **showrecent**: Determines if the user's recent photos are displayed by default.  This option takes precedences over the 'set' and 'group' options.  So, if this is set to true then your recent photos will be displayed even if you have added the 'set' or 'group' attribute to the tag.  Default is 'false'. 
 * 	**set**: The set id of the flickr set you would like to display. (Set or Group Required)
-* 	**group**: The group id of the flickr group you would like to display. Go to <http://www.mentalaxis.com/idfindr/> to find a group id needed for this field. (Set or Group Required)
+* 	**group**: The group id of the flickr group you would like to display. Go to <http://idgettr.com/> to find a group id needed for this field. (Set or Group Required)
+*  **count**:  The number of images to be displayed.  The maximum number the flickr API allows is 500. (For unlimited set to 0.)  Default is '0'.
+*  **showimagecaption**:  Whether to display the image caption.  Can be "true" or "false". Default is 'true'.
+*  **showimagelink**:   Whether to display the image link.  The image link is part of the caption so showimagecaption must be 'true' for the image link to be displayed.  Can be "true" or "false". Default is 'true'.
 * 	**width**: The width of the flash object (optional). Default is '100%'.
 * 	**height**: The height of the flash object (optional). Default is '800'.
 * 	**bgcolor**: The background color of the flash object (optional). Default is '#FFFFFF'.
@@ -107,18 +130,11 @@ The following are the attributes available for the tag:
 * 	**thumbnailrows**: Number of thumbnail columns. (To disable thumbnails completely set this value to 0.)  Default is '3'.
 * 	**enablerightclickopen**: Whether to display a 'Open In new Window...' dialog when right-clicking on an image. Can be "true" or "false". Default is 'true'. 
 
-The following are the option settings available:
-
-* 	**API Key**: Go to <http://www.flickr.com/services/api/keys/> to get an API key.  This is needed to access your tags.
-* 	**Flickr Screen Name**: This is used to determine the URL of your flickr site. (Ex: http://www.flickr.com/photos/screenname)
-
 == Special Thanks ==
 
-Special thanks to the developers and community around these two great pieces of software:
+Special thanks to the developers and community around this great piece of software:
 
-[SimpleViewer](http://www.airtightinteractive.com/simpleviewer/ "Simpleviewer") by Airtight
-
-[Flickrviewer](http://www.sweeting.org/mark/flickrviewer/ "Flickrviewer") by Mark Sweeting
+[SimpleViewer](http://www.airtightinteractive.com/simpleviewer/ "Simpleviewer") by Airtight Interactive
 
 == Copyright == 
 
