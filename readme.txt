@@ -3,8 +3,8 @@ Contributors: joshgerdes
 Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Tags: images, flickr, simpleviewer, gallery
 Requires at least: 2.0
-Tested up to: 2.1.3
-Stable tag: 2.0
+Tested up to: 2.2
+Stable tag: 2.0.1
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -40,6 +40,11 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 1. An Example of how SimpleFlickr displays in a page or post.
 
 == Release Notes ==
+
+*Version 2.0.1*:
+
+*  Fixed title to allow and save blank titles.
+*  Fixed 'View flickr photo page..' links when showing group pools.
 
 *Version 2.0*:
 
@@ -141,3 +146,7 @@ Special thanks to the developers and community around this great piece of softwa
 Copyright (c) 2007 
 Released under the GPL license
 <http://www.gnu.org/licenses/gpl.txt>
+
+== Disclaimer ==
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

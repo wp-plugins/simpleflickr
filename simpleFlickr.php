@@ -4,7 +4,7 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 2.0
+Version: 2.0.1
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
@@ -16,7 +16,7 @@ http://www.gnu.org/licenses/gpl.txt
 if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFlickr.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "2.0");
+define('SIMPLEFLICKR_VERSION', "2.0.1");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
@@ -222,8 +222,6 @@ class SimpleFlickrPlugin {
 					$simpleFlickr_showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
 				if(empty($simpleFlickr_showimagelink)) 
 					$simpleFlickr_showimagelink = $simpleFlickrOptionsDB['SHOW_IMAGE_LINK'];
-				if(empty($simpleFlickr_title)) 
-					$simpleFlickr_title = $simpleFlickrOptionsDB['TITLE'];
 				if(empty($simpleFlickr_width)) 
 					$simpleFlickr_width = $simpleFlickrOptionsDB['WIDTH'];
 				if(empty($simpleFlickr_height)) 
@@ -868,8 +866,15 @@ class SimpleFlickrPlugin {
 		   {
 		      if($showimagelink == 'true')
 		      {
-		         $xmlout .= "<![CDATA[<a href=\"{$photos_url}{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>View flickr photo page...</u></a>]]>";
-		      }
+				if(!empty($group)) 
+				{
+					$xmlout .= "<![CDATA[<a href=\"http://www.flickr.com/photos/{$photo[ownername]}/{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>View flickr photo page...</u></a>]]>";
+				}
+				else
+				{
+					$xmlout .= "<![CDATA[<a href=\"{$photos_url}{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>View flickr photo page...</u></a>]]>";
+				}
+			  }
 		      else
 		      {
 		         $xmlout .= "<![CDATA[{$photo[title]}]]>";
