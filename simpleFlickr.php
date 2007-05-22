@@ -4,7 +4,7 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 2.0.1
+Version: 2.1
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
@@ -86,7 +86,7 @@ class SimpleFlickrPlugin {
 	function add_flashobject_js() {
 		echo('
 		<!-- Added by SimpleFlickr - Version '. SIMPLEFLICKR_VERSION . ' -->
-		<script src="' . $this->get_plugin_uri() . 'swfobject.js" type="text/javascript"></script>
+		<script src="' . $this->get_plugin_uri() . 'ufo/ufo.js" type="text/javascript"></script>
 		');
 	}
 	
@@ -658,17 +658,17 @@ class SimpleFlickrPlugin {
 		
 		// Create the script
 		$output	= array();
-		$output[] = '<div id="fo_targ_viewer' . $rand . '" class="flashmovie"><strong>You need to upgrade or install Adobe Flash Player</strong></div>';
+		$output[] = '<div id="SF_' . $rand . '_Viewer" class="flashmovie">';
+		$output[] = '<strong>You need to upgrade or install Adobe Flash Player</strong><br />';
+		$output[] = '<a href="http://www.macromedia.com/go/getflashplayer"><img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get macromedia Flash Player" style="border:none;" /></a>';
+		$output[] = '</div>';
 		$output[] = '';
 		$output[] = '<script type="text/javascript">';
 		$output[] = '';
 		$output[] = '// <![CDATA[';
 		$output[] = '';
-		$output[] = 'var so_' . $rand . ' = new SWFObject("'. $this->get_plugin_uri() .'viewer.swf","fm_viewer","' . $width . '","' . $height . '","6","' . $bgcolor . '","","' . $quality . '","","");';
-		$output[] = 'so_' . $rand . '.addParam("base", "' . $this->get_plugin_uri() . '");';
-		$output[] = 'so_' . $rand . '.addVariable("xmlDataPath","' . $this->get_plugin_uri() . 'simpleFlickr.php?parameters=' . $parameters . '");';
-		$output[] = 'so_' . $rand . '.useExpressInstall("' . $this->get_plugin_uri() . 'expressinstall.swf");';
-		$output[] = 'so_' . $rand . '.write("fo_targ_viewer' . $rand . '");';
+		$output[] = 'var SF_' . $rand . ' = { movie:"' . $this->get_plugin_uri() . 'viewer.swf", width:"' . $width . '", height:"' . $height . '", bgcolor:"' . $bgcolor . '", quality:"' . $quality . '", majorversion:"9", build:"0", xi:"true", base:"' . $this->get_plugin_uri() . '", flashvars:"xmlDataPath=' . $this->get_plugin_uri() . 'simpleFlickr.php?parameters=' . $parameters . '", ximovie:"' . $this->get_plugin_uri()  . 'ufo/ufo.swf" };';
+		$output[] = 'UFO.create(SF_' . $rand . ', "SF_' . $rand . '_Viewer");';
 		$output[] = '';
 		$output[] = '// ]]>';
 		$output[] = '';
