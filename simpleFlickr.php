@@ -16,7 +16,7 @@ http://www.gnu.org/licenses/gpl.txt
 if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFlickr.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "2.0.1");
+define('SIMPLEFLICKR_VERSION', "2.1");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
