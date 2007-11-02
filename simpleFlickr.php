@@ -4,7 +4,7 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 2.1
+Version: 2.5
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
@@ -14,9 +14,10 @@ http://www.gnu.org/licenses/gpl.txt
 
 // Required libraries
 if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFlickr.php");
+if(!class_exists("buttonsnap"))	require_once(dirname(__FILE__)."/buttonsnap/buttonsnap.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "2.1");
+define('SIMPLEFLICKR_VERSION', "2.5");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
@@ -41,6 +42,9 @@ define('SIMPLEFLICKR_DEFAULT_SHOWRECENT', "false");
 define('SIMPLEFLICKR_DEFAULT_COUNT', "0");
 define('SIMPLEFLICKR_DEFAULT_SHOWIMAGECAPTION', "true");
 define('SIMPLEFLICKR_DEFAULT_SHOWIMAGELINK', "true");
+define('SIMPLEFLICKR_DEFAULT_IMAGESIZE', "Medium");
+define('SIMPLEFLICKR_DEFAULT_IMAGELINKTEXT', "View flickr photo page...");
+define('SIMPLEFLICKR_DEFAULT_PRIVACYFILTER', "1");
 
 class SimpleFlickrPlugin {
 	function SimpleFlickrPlugin() {
@@ -55,6 +59,9 @@ class SimpleFlickrPlugin {
 			// Everything else
 			$request_type	= "nonfeed";
 			add_action('wp_head', array(&$this, 'add_flashobject_js'));
+			add_action('edit_form_advanced', array(&$this, 'add_button_js'));
+			add_action('edit_page_form', array(&$this, 'add_button_js'));
+			add_action('init', array(&$this, 'addbuttons'));
 		}
 
 		// Apply all over except the admin section
@@ -66,18 +73,82 @@ class SimpleFlickrPlugin {
 		add_action('admin_menu', array(&$this, 'admin_menu'));
 	}
 
+	// Make our button on the write screens
+	function addbuttons() {
+		// Don't bother doing this stuff if the current user lacks permissions as they'll never see the pages
+		if ( !current_user_can('edit_posts') && !current_user_can('edit_pages') ) return;
+
+		// If WordPress 2.1+ and using TinyMCE, we need to insert the buttons differently
+		if ( class_exists('WP_Scripts') && 'true' == get_user_option('rich_editing') ) {
+			// Load and append our TinyMCE external plugin
+			add_filter('mce_plugins', array(&$this, 'mce_plugins'));
+			add_filter('mce_buttons', array(&$this, 'mce_buttons'));
+			add_action('tinymce_before_init', array(&$this, 'tinymce_before_init'));
+		} else {
+			buttonsnap_separator();
+			buttonsnap_jsbutton($this->get_plugin_uri() . 'buttonsnap/images/flickr.png', __('SimpleFlickr', 'sfq'), 'SimpleFlickrInsertSet("http://flickr.com/photos/joshgerdes/sets/72157594408754918/", "simpleflickr");');
+			
+		}
+	}
+
+	// Add buttons in WordPress v2.1+, thanks to An-archos
+	function mce_plugins($plugins) {
+		array_push($plugins, 'simpleflickr');
+		return $plugins;
+	}
+	function mce_buttons($buttons) {
+		if ( 1 == $this->settings['tinymce_linenumber'] ) array_push($buttons, 'separator');
+
+		array_push($buttons, 'simpleflickr');
+		return $buttons;
+	}
+	function tinymce_before_init() {
+		echo 'tinyMCE.loadPlugin("simpleflickr", "' . $this->get_plugin_uri() . 'buttonsnap/tinymce/");';
+	}
+
+	function add_button_js() {
+		echo('
+		<!-- Added by SimpleFlickr - Version '. SIMPLEFLICKR_VERSION . ' -->
+		<script src="' . $this->get_plugin_uri() . 'simpleFlickr.js" type="text/javascript"></script>
+		');
+	}
+
 	function get_image() {
 		// Redirect SimpleViewer to the image on flickr
-	   $size  = isset($_GET['size'])  ? $_GET['size'] : 'thumb';
+	   $size  = isset($_GET['size'])  ? $_GET['size'] : 'Square';
 	   $image = isset($_GET['image']) ? $_GET['image']: '0';
-	   if($size == 'thumb')
-	   {
-	      $url = 'http://static.flickr.com/' . $image . '_s.jpg';
+	   $ext = ".jpg";
+	   $urlbase = "http://static.flickr.com/";
+	   
+	   switch(strtolower($size)) {
+			case "square":
+			$ext = "_s.jpg";
+			break;
+			case "thumbnail":
+			$ext = "_t.jpg";
+			break;
+			case "small":
+			$ext = "_m.jpg";
+			break;
+			case "medium":
+			$ext = ".jpg";
+			break;
+			case "large":
+			$ext = "_b.jpg";
+			break;
+			case "original":
+			$ext = "_o.jpg";
+			$image = substr($image, strpos($image, "__") + 2 , strlen($image)); 
+			break;
+			case "squareoriginal":
+			$ext = "_s.jpg";
+			$image = substr($image, 0, strpos($image, "__")); 
+			break;
 	   }
-	   else
-	   {
-	      $url = 'http://static.flickr.com/'. $image . '.jpg';
-	   }
+
+	   // Setup the url for the image
+	   $url = $urlbase . $image . $ext;
+
 	   header("HTTP/1.1 301 Moved Permanently");
 	   header("Location: $url");
 	   exit;
@@ -184,6 +255,9 @@ class SimpleFlickrPlugin {
 				$simpleFlickr_enablerightclickopen = trim($_POST['simpleFlickr_enablerightclickopen']);
 				$simpleFlickr_showimagecaption = trim($_POST['simpleFlickr_showimagecaption']);
 				$simpleFlickr_showimagelink = trim($_POST['simpleFlickr_showimagelink']);
+				$simpleFlickr_imagesize = trim($_POST['simpleFlickr_imagesize']);
+				$simpleFlickr_imagelinktext = str_replace(",", "", trim($_POST['simpleFlickr_imagelinktext']));
+				$simpleFlickr_privacyfilter = trim($_POST['simpleFlickr_privacyfilter']);
 				$simpleFlickr_title = trim($_POST['simpleFlickr_title']);
 				$simpleFlickr_width = trim($_POST['simpleFlickr_width']);
 				$simpleFlickr_height = trim($_POST['simpleFlickr_height']);
@@ -208,9 +282,9 @@ class SimpleFlickrPlugin {
 					$simpleFlickr_textcolor = $simpleFlickrOptionsDB['TEXT_COLOR'];
 				if(empty($simpleFlickr_framecolor)) 
 					$simpleFlickr_framecolor = $simpleFlickrOptionsDB['FRAME_COLOR'];
-				if(empty($simpleFlickr_framewidth)) 
+				if(empty($simpleFlickr_framewidth) && $simpleFlickr_framewidth != '0') 
 					$simpleFlickr_framewidth = $simpleFlickrOptionsDB['FRAME_WIDTH'];
-				if(empty($simpleFlickr_stagepadding)) 
+				if(empty($simpleFlickr_stagepadding) && $simpleFlickr_stagepadding != '0') 
 					$simpleFlickr_stagepadding = $simpleFlickrOptionsDB['STAGE_PADDING'];
 				if(empty($simpleFlickr_thumbnailcolumns) && $simpleFlickr_thumbnailcolumns != '0') 
 					$simpleFlickr_thumbnailcolumns = $simpleFlickrOptionsDB['THUMBNAIL_COLUMNS'];
@@ -222,6 +296,12 @@ class SimpleFlickrPlugin {
 					$simpleFlickr_showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
 				if(empty($simpleFlickr_showimagelink)) 
 					$simpleFlickr_showimagelink = $simpleFlickrOptionsDB['SHOW_IMAGE_LINK'];
+				if(empty($simpleFlickr_imagesize)) 
+					$simpleFlickr_imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
+				if(empty($simpleFlickr_imagesize)) 
+					$simpleFlickr_imagelinktext = $simpleFlickrOptionsDB['IMAGE_LINK_TEXT'];
+				if(empty($simpleFlickr_privacyfilter)) 
+					$simpleFlickr_privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
 				if(empty($simpleFlickr_width)) 
 					$simpleFlickr_width = $simpleFlickrOptionsDB['WIDTH'];
 				if(empty($simpleFlickr_height)) 
@@ -247,6 +327,9 @@ class SimpleFlickrPlugin {
 				$simpleFlickrOptionsNewArr['ENABLE_RIGHT_CLICK_OPEN'] = $simpleFlickr_enablerightclickopen;
 				$simpleFlickrOptionsNewArr['SHOW_IMAGE_CAPTION'] = $simpleFlickr_showimagecaption;
 				$simpleFlickrOptionsNewArr['SHOW_IMAGE_LINK'] = $simpleFlickr_showimagelink;
+				$simpleFlickrOptionsNewArr['IMAGE_SIZE'] = $simpleFlickr_imagesize;
+				$simpleFlickrOptionsNewArr['IMAGE_LINK_TEXT'] = $simpleFlickr_imagelinktext;
+				$simpleFlickrOptionsNewArr['PRIVACY_FILTER'] = $simpleFlickr_privacyfilter;
 				$simpleFlickrOptionsNewArr['TITLE'] = $simpleFlickr_title;
 				$simpleFlickrOptionsNewArr['WIDTH'] = $simpleFlickr_width;
 				$simpleFlickrOptionsNewArr['HEIGHT'] = $simpleFlickr_height;
@@ -276,6 +359,9 @@ class SimpleFlickrPlugin {
 			$simpleFlickr_enablerightclickopen = $simpleFlickrOptionsDB['ENABLE_RIGHT_CLICK_OPEN'];
 			$simpleFlickr_showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
 			$simpleFlickr_showimagelink = $simpleFlickrOptionsDB['SHOW_IMAGE_LINK'];
+			$simpleFlickr_imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
+			$simpleFlickr_imagelinktext = $simpleFlickrOptionsDB['IMAGE_LINK_TEXT'];
+			$simpleFlickr_privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
 			$simpleFlickr_title = $simpleFlickrOptionsDB['TITLE'];
 			$simpleFlickr_width = $simpleFlickrOptionsDB['WIDTH'];
 			$simpleFlickr_height = $simpleFlickrOptionsDB['HEIGHT'];
@@ -297,9 +383,9 @@ class SimpleFlickrPlugin {
 				$simpleFlickr_textcolor = SIMPLEFLICKR_DEFAULT_TEXTCOLOR;
 			if(empty($simpleFlickr_framecolor)) 
 				$simpleFlickr_framecolor = SIMPLEFLICKR_DEFAULT_FRAMECOLOR;
-			if(empty($simpleFlickr_framewidth)) 
+			if(empty($simpleFlickr_framewidth)&& $simpleFlickr_framewidth != '0') 
 				$simpleFlickr_framewidth = SIMPLEFLICKR_DEFAULT_FRAMEWIDTH;
-			if(empty($simpleFlickr_stagepadding)) 
+			if(empty($simpleFlickr_stagepadding)&& $simpleFlickr_stagepadding != '0') 
 				$simpleFlickr_stagepadding = SIMPLEFLICKR_DEFAULT_STAGEPADDING;
 			if(empty($simpleFlickr_thumbnailcolumns) && $simpleFlickr_thumbnailcolumns != '0') 
 				$simpleFlickr_thumbnailcolumns = SIMPLEFLICKR_DEFAULT_THUMBNAILCOLUMNS;
@@ -311,6 +397,12 @@ class SimpleFlickrPlugin {
 				$simpleFlickr_showimagecaption = SIMPLEFLICKR_DEFAULT_SHOWIMAGECAPTION;
 			if(empty($simpleFlickr_showimagelink)) 
 				$simpleFlickr_showimagelink = SIMPLEFLICKR_DEFAULT_SHOWIMAGELINK;
+			if(empty($simpleFlickr_imagesize)) 
+				$simpleFlickr_imagesize = SIMPLEFLICKR_DEFAULT_IMAGESIZE;
+			if(empty($simpleFlickr_imagelinktext)) 
+				$simpleFlickr_imagelinktext = SIMPLEFLICKR_DEFAULT_IMAGELINKTEXT;
+			if(empty($simpleFlickr_privacyfilter)) 
+				$simpleFlickr_privacyfilter = SIMPLEFLICKR_DEFAULT_PRIVACYFILTER;
 			if(empty($simpleFlickr_width)) 
 				$simpleFlickr_width = SIMPLEFLICKR_DEFAULT_WIDTH;
 			if(empty($simpleFlickr_height)) 
@@ -319,6 +411,7 @@ class SimpleFlickrPlugin {
 				$simpleFlickr_quality = SIMPLEFLICKR_DEFAULT_QUALITY;
 			if(empty($simpleFlickr_bgcolor)) 
 				$simpleFlickr_bgcolor = SIMPLEFLICKR_DEFAULT_BGCOLOR;
+			
 				
 			// Add header html
 			echo('<div class=wrap>');
@@ -326,15 +419,25 @@ class SimpleFlickrPlugin {
 			echo("<div>");
 
 			// Add paypal div
-			echo("<div  style=\"float:right;width:160px;background:#ddd;border:1px solid #999;padding:10px;font-size:0.9em;margin-left:10px;\">");
-			echo("<form name=\"paypal\" id=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">");
-			echo("<h3>Enjoy this Plugin?</h3>");
-			echo("<p>If you like this plugin, and wish to contribute to its development, consider making a donation.</p>");
-			echo("<form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">");
-			echo("<input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\">");
-			echo("<input type=\"image\" src=\"https://www.paypal.com/en_US/i/btn/x-click-but04.gif\" border=\"0\" name=\"submit\" alt=\"Make payments with PayPal - it's fast, free and secure.\">");
-			echo("<img alt=\"\" border=\"0\" src=\"https://www.paypal.com/en_US/i/scr/pixel.gif\" width=\"1\" height=\"1\">");
-			echo("<input type=\"hidden\" name=\"encrypted\" value=\"-----BEGIN PKCS7-----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-----END PKCS7-----\"></form></div>");
+			echo('<div style="float:right;width:160px;background:#ddd;border:1px solid #999;padding:10px;font-size:0.9em;margin-left:10px;">');
+			echo('<h3>Enjoy this Plugin?</h3>');
+			echo('<p>If you like this plugin, and wish to contribute to its development, consider making a donation.</p>');
+			echo('<form action="https://www.paypal.com/cgi-bin/webscr" method="post">');
+echo('<input type="hidden" name="cmd" value="_s-xclick">');
+echo('<input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" border="0" name="submit" alt="Make payments with PayPal - it is fast, free and secure!">');
+echo('<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">');
+echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
+">
+</form></div>');
+			
+			//echo("<form name=\"paypal\" id=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">");
+			//echo("<h3>Enjoy this Plugin?</h3>");
+			//echo("<p>If you like this plugin, and wish to contribute to its development, consider making a donation.</p>");
+			//echo("<form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">");
+			//echo("<input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\">");
+			//echo("<input type=\"image\" src=\"https://www.paypal.com/en_US/i/btn/x-click-but04.gif\" border=\"0\" name=\"submit\" alt=\"Make payments with PayPal - it's fast, free and secure.\">");
+			//echo("<img alt=\"\" border=\"0\" src=\"https://www.paypal.com/en_US/i/scr/pixel.gif\" width=\"1\" height=\"1\">");
+			//echo("<input type=\"hidden\" name=\"encrypted\" value=\"-----BEGIN PKCS7-----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-----END PKCS7-----\"></form></div>");
 			
 			// Add description
 			echo("<div style=\"float:left;margin-bottom=20\">");
@@ -398,6 +501,56 @@ class SimpleFlickrPlugin {
 			echo(">False</option>");
 			echo("</select><br />");
 			echo("<em>You must provide whether to display the image link.  The image link is part of the caption so showimagecaption must be 'true' for the image link to be displayed.  Can be \"true\" or \"false\". Default is 'true'.</em> <br /><br />");
+			echo("</li>");
+			echo("<li>");
+			echo("<label for=\"simpleFlickr_imagelinktext\"><strong>Image Link Text:</strong></label>&nbsp;&nbsp;");
+			echo("<input type=\"text\" name=\"simpleFlickr_imagelinktext\" id=\"simpleFlickr_imagelinktext\" size=\"30\" value=\"" . $simpleFlickr_imagelinktext . "\" /><br />");
+			echo("<em>This is the text to display as a image link.  Default is 'View flickr photo page...'</em> <br /><br />");
+			echo("</li>");
+			echo("<li>");
+			echo("<label for=\"simpleFlickr_imagesize\"><strong>Image Size:</strong></label>&nbsp;&nbsp;");
+			echo("<select name=\"simpleFlickr_imagesize\" id=\"simpleFlickr_imagesize\">");
+			echo("	<option value=\"Square\""); 
+			if($simpleFlickr_imagesize=='Square')	echo(" selected");
+			echo(">Square</option>");
+			echo("	<option value=\"Thumbnail\""); 
+			if($simpleFlickr_imagesize=='Thumbnail')	echo(" selected");
+			echo(">Thumbnail</option>");
+			echo("	<option value=\"Small\""); 
+			if($simpleFlickr_imagesize=='Small')	echo(" selected");
+			echo(">Small</option>");
+			echo("	<option value=\"Medium\""); 
+			if($simpleFlickr_imagesize=='Medium')	echo(" selected");
+			echo(">Medium</option>");
+			echo("	<option value=\"Large\""); 
+			if($simpleFlickr_imagesize=='Large')	echo(" selected");
+			echo(">Large</option>");
+			echo("	<option value=\"Original\""); 
+			if($simpleFlickr_imagesize=='Original')	echo(" selected");
+			echo(">Original</option>");
+			echo("</select><br />");
+			echo("<em>You must provide the size of the image displayed in the simpleviewer flash object.  Can be 'Square', 'Thumbnail', 'Small', 'Medium', 'Large', 'Original'.  Default is 'Medium'.</em> <br /><br />");
+			echo("</li>");
+			echo("<li>");
+			echo("<label for=\"simpleFlickr_privacyfilter\"><strong>Privacy Filter:</strong></label>&nbsp;&nbsp;");
+			echo("<select name=\"simpleFlickr_privacyfilter\" id=\"simpleFlickr_privacyfilter\">");
+			echo("	<option value=\"1\""); 
+			if($simpleFlickr_privacyfilter=='1')	echo(" selected");
+			echo(">Public photos</option>");
+			echo("	<option value=\"2\""); 
+			if($simpleFlickr_privacyfilter=='2')	echo(" selected");
+			echo(">Private photos visible to friends</option>");
+			echo("	<option value=\"3\""); 
+			if($simpleFlickr_privacyfilter=='3')	echo(" selected");
+			echo(">Private photos visible to family</option>");
+			echo("	<option value=\"4\""); 
+			if($simpleFlickr_privacyfilter=='4')	echo(" selected");
+			echo(">Private photos visible to friends & family</option>");
+			echo("	<option value=\"5\""); 
+			if($simpleFlickr_privacyfilter=='5')	echo(" selected");
+			echo(">Completely private photos</option>");			
+			echo("</select><br />");
+			echo("<em>Determines what photos are displayed based on the level of privacy selected. Values can be 'Public photos', 'Private photos visible to friends', 'Private photos visible to family', 'Private photos visible to friends & family', 'Completely private photos'.  Default is 'Public photos'.</em> <br /><br />");
 			echo("</li>");
 			echo("<li>");
 			echo("<label for=\"simpleFlickr_title\"><strong>Title:</strong></label>&nbsp;&nbsp;");
@@ -653,6 +806,9 @@ class SimpleFlickrPlugin {
 		$params[] = $count;
 		$params[] = $showimagecaption;
 		$params[] = $showimagelink;
+		$params[] = $imagesize;
+		$params[] = $imagelinktext;
+		$params[] = $privacyfilter;
 		
 		$parameters = join(",", $params);
 		
@@ -733,6 +889,9 @@ class SimpleFlickrPlugin {
 		$count = $simpleFlickrOptionsDB['COUNT'];
 		$showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
 		$showimagelink = $simpleFlickrOptionsDB['SHOW_IMAGE_LINK'];
+		$imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
+		$imagelinktext = $simpleFlickrOptionsDB['IMAGE_LINK_TEXT'];
+		$privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
 		
 		// Get the values from the tag if given
 		$array = split(",", $_GET{parameters});
@@ -753,6 +912,9 @@ class SimpleFlickrPlugin {
 		if(!empty($array[14]))	$count = $array[14];
 		if(!empty($array[15]))	$showimagecaption = $array[15];
 		if(!empty($array[16]))	$showimagelink = $array[16];
+		if(!empty($array[17]))	$imagesize = $array[17];
+		if(!empty($array[18]))	$imagelinktext = $array[18];
+		if(!empty($array[19]))	$privacyfilter = $array[19];
 
 		// Check if set or group given or if recent set to true
 		if( !isset($setid) && !isset($group) && $showrecent != 'true' ) {
@@ -796,10 +958,10 @@ class SimpleFlickrPlugin {
 		if($showrecent == 'true' ) {
 			// Get the user's recent photos
 			if($count > 0 ) {
-				$photos = $flickr->photos_search(array("user_id" => $nsid, "per_page" => $count));
+				$photos = $flickr->photos_search(array("user_id" => $nsid, "per_page" => $count, "privacy_filter" => $privacyfilter));
 			}
 			else {
-				$photos = $flickr->photos_search(array("user_id" => $nsid));
+				$photos = $flickr->photos_search(array("user_id" => $nsid, "privacy_filter" => $privacyfilter));
 			}
 		}
 		else {
@@ -815,10 +977,10 @@ class SimpleFlickrPlugin {
 			else {
 				// Get the phtos for the given set
 				if($count > 0 ) {
-					$photos = $flickr->photosets_getPhotos($setid, NULL, NULL, $count, NULL);
+					$photos = $flickr->photosets_getPhotos($setid, $privacyfilter, NULL, $count, NULL);
 				}
 				else {
-					$photos = $flickr->photosets_getPhotos($setid);
+					$photos = $flickr->photosets_getPhotos($setid, $privacyfilter);
 				}
 			}
 		}
@@ -837,7 +999,10 @@ class SimpleFlickrPlugin {
 			}
 			exit;
 		}
-
+		
+		// Check for special original setting
+		$thumbtype = (strtolower($imagesize) == "original") ? "SquareOriginal" : "Square";
+		
 		// Generate xml output
 		$xmlout = '<?xm' . 'l version="1.0" encoding="UTF-8"?>';
 		$xmlout .= '<!-- Last updated: ' . date("r") . ' -->';
@@ -855,24 +1020,56 @@ class SimpleFlickrPlugin {
 			navDirection="LTR"
 			enableRightClickOpen="' . $enablerightclickopen . '"
 			title="' . $title . '"
-			imagePath="simpleFlickr.php?mode=img&amp;size=large&amp;image="
-			thumbPath="simpleFlickr.php?mode=img&amp;size=thumb&amp;image=">
+			imagePath="simpleFlickr.php?mode=img&amp;size=' . $imagesize . '&amp;image="
+			thumbPath="simpleFlickr.php?mode=img&amp;size=' . $thumbtype . '&amp;image=">
 		';
 		
 		foreach ((array)$photos['photo'] as $photo)
 		{
-		   $xmlout .= "<IMAGE><NAME>{$photo[server]}/{$photo[id]}_{$photo[secret]}</NAME><CAPTION>";
+		   // Get original photo url
+		   $sizes = $flickr->photos_getSizes($photo[id]);
+		
+		   if($sizes)
+		   {
+				// Loop through the sizes
+				foreach ($sizes as $size)
+				{
+					// get the source image url of the desired size
+					if (strtolower($size['label']) == strtolower($imagesize))
+					{
+						$photoName = substr($size['source'], 7);
+						$photoName = substr($photoName, strpos($photoName, "/") + 1);	
+						if( substr_count($photoName, "_") > 1)
+							$endPos = strrpos($photoName, "_");
+						else
+							$endPos = strlen($photoName) - 4;
+							
+						$photoName = substr($photoName, 0, $endPos);
+						break;
+					}
+				}
+				
+				// If size not found then use standard
+				if(empty($photoName))
+					$photoName = "{$photo[server]}/{$photo[id]}_{$photo[secret]}";
+				
+				// Check for original and add info
+				if(strtolower($imagesize) == "original")
+					$photoName = "{$photo[server]}/{$photo[id]}_{$photo[secret]}__" . $photoName;
+		   }
+		
+		   $xmlout .= "<IMAGE><NAME>{$photoName}</NAME><CAPTION>";
 		   if($showimagecaption == 'true')
 		   {
 		      if($showimagelink == 'true')
 		      {
 				if(!empty($group)) 
 				{
-					$xmlout .= "<![CDATA[<a href=\"http://www.flickr.com/photos/{$photo[ownername]}/{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>View flickr photo page...</u></a>]]>";
+					$xmlout .= "<![CDATA[<a href=\"http://www.flickr.com/photos/{$photo[ownername]}/{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>{$imagelinktext}</u></a>]]>";
 				}
 				else
 				{
-					$xmlout .= "<![CDATA[<a href=\"{$photos_url}{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>View flickr photo page...</u></a>]]>";
+					$xmlout .= "<![CDATA[<a href=\"{$photos_url}{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>{$imagelinktext}</u></a>]]>";
 				}
 			  }
 		      else

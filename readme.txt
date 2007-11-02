@@ -3,8 +3,8 @@ Contributors: joshgerdes
 Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Tags: images, flickr, simpleviewer, gallery
 Requires at least: 2.0
-Tested up to: 2.2
-Stable tag: 2.1
+Tested up to: 2.3.1
+Stable tag: 2.5
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -40,6 +40,13 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 1. An Example of how SimpleFlickr displays in a page or post.
 
 == Release Notes ==
+
+*Version 2.5*:
+
+*  Added TinyMCE quick tag button for SimpleFlickr to the Wordpress editor.
+*  Added ability to alter the image link text displayed for a given photo.
+*  Added ability to set the size of the images that are returned from flickr. (Including Original size)
+*  Added ability to set the privacy filter for what images are returned from flickr.
 
 *Version 2.1*:
 
@@ -123,6 +130,9 @@ The following are the attributes available for the tag:
 *  **count**:  The number of images to be displayed.  The maximum number the flickr API allows is 500. (For unlimited set to 0.)  Default is '0'.
 *  **showimagecaption**:  Whether to display the image caption.  Can be "true" or "false". Default is 'true'.
 *  **showimagelink**:   Whether to display the image link.  The image link is part of the caption so showimagecaption must be 'true' for the image link to be displayed.  Can be "true" or "false". Default is 'true'.
+*  **imagelinktext**:  This is the text to display as a image link. Default is 'View flickr photo page...' 
+* 	**imagesize**: You must provide the size of the image displayed in the simpleviewer flash object. Can be 'Square', 'Thumbnail', 'Small', 'Medium', 'Large', 'Original'. Default is 'Medium'. 
+* 	**privacyfilter**: Determines what photos are displayed based on the level of privacy selected. Values can be 'Public photos', 'Private photos visible to friends', 'Private photos visible to family', 'Private photos visible to friends & family', 'Completely private photos'. Default is 'Public photos'. 
 * 	**width**: The width of the flash object (optional). Default is '100%'.
 * 	**height**: The height of the flash object (optional). Default is '800'.
 * 	**bgcolor**: The background color of the flash object (optional). Default is '#FFFFFF'.
