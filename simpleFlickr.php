@@ -560,12 +560,12 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 			echo("<li>");
 			echo("<label for=\"simpleFlickr_width\"><strong>Width:</strong></label>&nbsp;&nbsp;");
 			echo("<input type=\"text\" name=\"simpleFlickr_width\" id=\"simpleFlickr_width\" size=\"4\" value=\"" . $simpleFlickr_width . "\" /><br />");
-			echo("<em>You must provide the width of the simpleviewer flash object.  Percentages and Pixel values can be givne.  Default is 100%.</em> <br /><br />");
+			echo("<em>You must provide the width of the simpleviewer flash object.  Percentages and Pixel values can be given.  Default is 100%.</em> <br /><br />");
 			echo("</li>");
 			echo("<li>");
 			echo("<label for=\"simpleFlickr_height\"><strong>Height:</strong></label>&nbsp;&nbsp;");
 			echo("<input type=\"text\" name=\"simpleFlickr_height\" id=\"simpleFlickr_height\" size=\"4\" value=\"" . $simpleFlickr_height . "\" /><br />");
-			echo(" <em>You must provide the height of the simpleviewer flash object.  Percentages and Pixel values can be givne.  Default is 100%.</em> <br /><br />");
+			echo(" <em>You must provide the height of the simpleviewer flash object.  Percentages and Pixel values can be given.  Default is 100%.</em> <br /><br />");
 			echo("</li>");
 			echo("<li>");
 			echo("<label for=\"simpleFlickr_quality\"><strong>Quality:</strong></label>&nbsp;&nbsp;");
