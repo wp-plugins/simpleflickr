@@ -4,7 +4,7 @@ Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Tags: images, flickr, simpleviewer, gallery
 Requires at least: 2.0
 Tested up to: 2.3.1
-Stable tag: 2.5
+Stable tag: 2.5.1
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -40,6 +40,11 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 1. An Example of how SimpleFlickr displays in a page or post.
 
 == Release Notes ==
+
+*Version 2.5.1*:
+
+*  Fixed bug with setting some attributes to 0 (thumbnailrows and thumbnailcolumns for example).
+*  Altered image calls to Flickr to increase speed.  Setting image size to 'Medium' is faster.
 
 *Version 2.5*:
 

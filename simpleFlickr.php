@@ -4,7 +4,7 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 2.5
+Version: 2.5.1
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
@@ -17,7 +17,7 @@ if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFli
 if(!class_exists("buttonsnap"))	require_once(dirname(__FILE__)."/buttonsnap/buttonsnap.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "2.5");
+define('SIMPLEFLICKR_VERSION', "2.5.1");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
@@ -96,12 +96,14 @@ class SimpleFlickrPlugin {
 		array_push($plugins, 'simpleflickr');
 		return $plugins;
 	}
+
 	function mce_buttons($buttons) {
 		if ( 1 == $this->settings['tinymce_linenumber'] ) array_push($buttons, 'separator');
 
 		array_push($buttons, 'simpleflickr');
 		return $buttons;
 	}
+
 	function tinymce_before_init() {
 		echo 'tinyMCE.loadPlugin("simpleflickr", "' . $this->get_plugin_uri() . 'buttonsnap/tinymce/");';
 	}
@@ -895,26 +897,26 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 		
 		// Get the values from the tag if given
 		$array = split(",", $_GET{parameters});
-		if(!empty($array[0]))	$showrecent = $array[0];
-		if(!empty($array[1]))	$setid = $array[1];
-		if(!empty($array[2]))	$group = $array[2];
-		if(!empty($array[3]))	$navposition = $array[3];
-		if(!empty($array[4]))	$maximagewidth = $array[4];
-		if(!empty($array[5]))	$maximageheight = $array[5];
-		if(!empty($array[6]))	$textcolor = $array[6];
-		if(!empty($array[7]))	$framecolor = $array[7];
-		if(!empty($array[8]))	$framewidth = $array[8];
-		if(!empty($array[9]))	$stagepadding = $array[9];
-		if(!empty($array[10]))	$thumbnailcolumns = $array[10];
-		if(!empty($array[11]))	$thumbnailrows = $array[11];
-		if(!empty($array[12]))	$enablerightclickopen = $array[12];
-		if(!empty($array[13]))	$title = $array[13];
-		if(!empty($array[14]))	$count = $array[14];
-		if(!empty($array[15]))	$showimagecaption = $array[15];
-		if(!empty($array[16]))	$showimagelink = $array[16];
-		if(!empty($array[17]))	$imagesize = $array[17];
-		if(!empty($array[18]))	$imagelinktext = $array[18];
-		if(!empty($array[19]))	$privacyfilter = $array[19];
+		if(isset($array[0]) && strlen($array[0]))	$showrecent = $array[0];
+		if(isset($array[1]) && strlen($array[1]))	$setid = $array[1];
+		if(isset($array[2]) && strlen($array[2]))	$group = $array[2];
+		if(isset($array[3]) && strlen($array[3]))	$navposition = $array[3];
+		if(isset($array[4]) && strlen($array[4]))	$maximagewidth = $array[4];
+		if(isset($array[5]) && strlen($array[5]))	$maximageheight = $array[5];
+		if(isset($array[6]) && strlen($array[6]))	$textcolor = $array[6];
+		if(isset($array[7]) && strlen($array[7]))	$framecolor = $array[7];
+		if(isset($array[8]) && strlen($array[8]))	$framewidth = $array[8];
+		if(isset($array[9]) && strlen($array[9]))	$stagepadding = $array[9];
+		if(isset($array[10]) && strlen($array[10]))	$thumbnailcolumns = $array[10];
+		if(isset($array[11]) && strlen($array[11]))	$thumbnailrows = $array[11];
+		if(isset($array[12]) && strlen($array[12]))	$enablerightclickopen = $array[12];
+		if(isset($array[13]) && strlen($array[13]))	$title = $array[13];
+		if(isset($array[14]) && strlen($array[14]))	$count = $array[14];
+		if(isset($array[15]) && strlen($array[15]))	$showimagecaption = $array[15];
+		if(isset($array[16]) && strlen($array[16]))	$showimagelink = $array[16];
+		if(isset($array[17]) && strlen($array[17]))	$imagesize = $array[17];
+		if(isset($array[18]) && strlen($array[18]))	$imagelinktext = $array[18];
+		if(isset($array[19]) && strlen($array[19]))	$privacyfilter = $array[19];
 
 		// Check if set or group given or if recent set to true
 		if( !isset($setid) && !isset($group) && $showrecent != 'true' ) {
@@ -1026,38 +1028,46 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 		
 		foreach ((array)$photos['photo'] as $photo)
 		{
-		   // Get original photo url
-		   $sizes = $flickr->photos_getSizes($photo[id]);
+			//Skip sizing if using Medium (default)
+			if(strtolower($imagesize) == "medium" )
+			{
+				$photoName = "{$photo[server]}/{$photo[id]}_{$photo[secret]}";
+			}
+			else
+			{
+				// Get original photo url
+				$sizes = $flickr->photos_getSizes($photo[id]);
 		
-		   if($sizes)
-		   {
-				// Loop through the sizes
-				foreach ($sizes as $size)
+				if($sizes)
 				{
-					// get the source image url of the desired size
-					if (strtolower($size['label']) == strtolower($imagesize))
+					// Loop through the sizes
+					foreach ($sizes as $size)
 					{
-						$photoName = substr($size['source'], 7);
-						$photoName = substr($photoName, strpos($photoName, "/") + 1);	
-						if( substr_count($photoName, "_") > 1)
-							$endPos = strrpos($photoName, "_");
-						else
-							$endPos = strlen($photoName) - 4;
-							
-						$photoName = substr($photoName, 0, $endPos);
-						break;
+						// get the source image url of the desired size
+						if (strtolower($size['label']) == strtolower($imagesize))
+						{
+							$photoName = substr($size['source'], 7);
+							$photoName = substr($photoName, strpos($photoName, "/") + 1);	
+							if( substr_count($photoName, "_") > 1)
+								$endPos = strrpos($photoName, "_");
+							else
+								$endPos = strlen($photoName) - 4;
+								
+							$photoName = substr($photoName, 0, $endPos);
+							break;
+						}
 					}
+					
+					// If size not found then use standard
+					if(empty($photoName))
+						$photoName = "{$photo[server]}/{$photo[id]}_{$photo[secret]}";
+					
+					// Check for original and add info
+					if(strtolower($imagesize) == "original")
+						$photoName = "{$photo[server]}/{$photo[id]}_{$photo[secret]}__" . $photoName;
 				}
-				
-				// If size not found then use standard
-				if(empty($photoName))
-					$photoName = "{$photo[server]}/{$photo[id]}_{$photo[secret]}";
-				
-				// Check for original and add info
-				if(strtolower($imagesize) == "original")
-					$photoName = "{$photo[server]}/{$photo[id]}_{$photo[secret]}__" . $photoName;
-		   }
-		
+			}
+			
 		   $xmlout .= "<IMAGE><NAME>{$photoName}</NAME><CAPTION>";
 		   if($showimagecaption == 'true')
 		   {
