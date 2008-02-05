@@ -4,7 +4,7 @@ Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Tags: images, flickr, simpleviewer, gallery
 Requires at least: 2.0
 Tested up to: 2.3.1
-Stable tag: 2.5.1
+Stable tag: 2.5.2
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -40,6 +40,10 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 1. An Example of how SimpleFlickr displays in a page or post.
 
 == Release Notes ==
+
+*Version 2.5.2*:
+
+*  Added background transparency attribute to plugin.  Thanks to David Pitman for the code update.
 
 *Version 2.5.1*:
 
@@ -133,7 +137,7 @@ The following are the attributes available for the tag:
 * 	**set**: The set id of the flickr set you would like to display. (Set or Group Required)
 * 	**group**: The group id of the flickr group you would like to display. Go to <http://idgettr.com/> to find a group id needed for this field. (Set or Group Required)
 *  **count**:  The number of images to be displayed.  The maximum number the flickr API allows is 500. (For unlimited set to 0.)  Default is '0'.
-*  **showimagecaption**:  Whether to display the image caption.  Can be "true" or "false". Default is 'true'.
+*  **showimagecaption**:  Whether to display the image caption.  Can be "true" or "false".  Default is 'true'.
 *  **showimagelink**:   Whether to display the image link.  The image link is part of the caption so showimagecaption must be 'true' for the image link to be displayed.  Can be "true" or "false". Default is 'true'.
 *  **imagelinktext**:  This is the text to display as a image link. Default is 'View flickr photo page...' 
 * 	**imagesize**: You must provide the size of the image displayed in the simpleviewer flash object. Can be 'Square', 'Thumbnail', 'Small', 'Medium', 'Large', 'Original'. Default is 'Medium'. 
@@ -141,6 +145,7 @@ The following are the attributes available for the tag:
 * 	**width**: The width of the flash object (optional). Default is '100%'.
 * 	**height**: The height of the flash object (optional). Default is '800'.
 * 	**bgcolor**: The background color of the flash object (optional). Default is '#FFFFFF'.
+* 	**bgtransparent**: Whether the background of the flash object is transparent (optional). Overrides background color setting.  Can be "true" or "false".  Default is 'false'.
 * 	**quality**: The quality of the flash object (optional). Default is 'best'.
 * 	**navPosition**: Position of thumbnails relative to image. Can be "top", "bottom", "left" or "right". Default is 'bottom'.
 * 	**title**: Text to display as gallery Title.  Default is blank.

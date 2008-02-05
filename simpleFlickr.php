@@ -4,7 +4,7 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Author: Josh Gerdes
-Version: 2.5.1
+Version: 2.5.2
 Author URI: http://www.joshgerdes.com
 
 Copyright (c) 2007
@@ -17,7 +17,7 @@ if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFli
 if(!class_exists("buttonsnap"))	require_once(dirname(__FILE__)."/buttonsnap/buttonsnap.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "2.5.1");
+define('SIMPLEFLICKR_VERSION', "2.5.2");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
@@ -28,6 +28,7 @@ define('SIMPLEFLICKR_DEFAULT_WIDTH', "100%");
 define('SIMPLEFLICKR_DEFAULT_HEIGHT', "800");
 define('SIMPLEFLICKR_DEFAULT_QUALITY', "best");
 define('SIMPLEFLICKR_DEFAULT_BGCOLOR', "#FFFFFF");
+define('SIMPLEFLICKR_DEFAULT_BGTRANSPARENT', "false");
 define('SIMPLEFLICKR_DEFAULT_NAVPOSITION', "bottom");
 define('SIMPLEFLICKR_DEFAULT_MAXIMAGEWIDTH', "500");
 define('SIMPLEFLICKR_DEFAULT_MAXIMAGEHEIGHT', "300");
@@ -265,7 +266,7 @@ class SimpleFlickrPlugin {
 				$simpleFlickr_height = trim($_POST['simpleFlickr_height']);
 				$simpleFlickr_quality = trim($_POST['simpleFlickr_quality']);
 				$simpleFlickr_bgcolor = trim($_POST['simpleFlickr_bgcolor']);
-
+				$simpleFlickr_bgtransparent = trim($_POST['simpleFlickr_bgtransparent']);
 				// Get array from DB
 				$simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
 
@@ -312,7 +313,9 @@ class SimpleFlickrPlugin {
 					$simpleFlickr_quality = $simpleFlickrOptionsDB['QUALITY'];
 				if(empty($simpleFlickr_bgcolor)) 
 					$simpleFlickr_bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
-	
+				if(empty($simpleFlickr_bgtransparent)) 
+					$simpleFlickr_bgtransparent = $simpleFlickrOptionsDB['BGTRANSPARENT'];
+					
 				// Add values to a new array to save
 				$simpleFlickrOptionsNewArr = array();
 				$simpleFlickrOptionsNewArr['SHOW_RECENT'] = $simpleFlickr_showrecent;
@@ -337,7 +340,8 @@ class SimpleFlickrPlugin {
 				$simpleFlickrOptionsNewArr['HEIGHT'] = $simpleFlickr_height;
 				$simpleFlickrOptionsNewArr['QUALITY'] = $simpleFlickr_quality;
 				$simpleFlickrOptionsNewArr['BGCOLOR'] = $simpleFlickr_bgcolor;
-			
+				$simpleFlickrOptionsNewArr['BGTRANSPARENT'] = $simpleFlickr_bgtransparent;
+				
 				// Save new array to DB
 				update_option(SIMPLEFLICKR_OPTIONS_NAME, $simpleFlickrOptionsNewArr);
 				
@@ -369,6 +373,8 @@ class SimpleFlickrPlugin {
 			$simpleFlickr_height = $simpleFlickrOptionsDB['HEIGHT'];
 			$simpleFlickr_quality = $simpleFlickrOptionsDB['QUALITY'];
 			$simpleFlickr_bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
+			$simpleFlickr_bgtransparent = $simpleFlickrOptionsDB['BGTRANSPARENT'];
+			
 		
 			// Fill with defaults if no DB value was given
 			if(empty($simpleFlickr_showrecent)) 
@@ -413,7 +419,8 @@ class SimpleFlickrPlugin {
 				$simpleFlickr_quality = SIMPLEFLICKR_DEFAULT_QUALITY;
 			if(empty($simpleFlickr_bgcolor)) 
 				$simpleFlickr_bgcolor = SIMPLEFLICKR_DEFAULT_BGCOLOR;
-			
+			if(empty($simpleFlickr_bgtransparent)) 
+				$simpleFlickr_bgtransparent = SIMPLEFLICKR_DEFAULT_BGTRANSPARENT;
 				
 			// Add header html
 			echo('<div class=wrap>');
@@ -599,6 +606,18 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 			echo("<em>You must provide the background color of the simpleviewer flash object (hexidecimal color value e.g #FF00FF).  Default is #FFFFFF.</em> <br /><br />");
 			echo("</li>");
 			echo("<li>");
+			echo("<label for=\"simpleFlickr_bgtransparent\"><strong>Transparent Background:</strong></label>&nbsp;&nbsp;");
+			echo("<select name=\"simpleFlickr_bgtransparent\" id=\"simpleFlickr_bgtransparent\">");
+			echo("<option value=\"true\"");
+			if($simpleFlickr_bgtransparent=='true')	echo(" selected");
+			echo(">True</option>");
+			echo("<option value=\"false\"");
+			if($simpleFlickr_bgtransparent=='false') echo(" selected");
+			echo(">False</option>");
+			echo("</select><br />");
+			echo("<em>Override the background color and make the background of SimpleViewer transparent.  Can be \"true\" or \"false\". Default is 'false'.</em> <br /><br />");
+			echo("</li>");
+			echo("<li>");
 			echo("<label for=\"simpleFlickr_navposition\"><strong>Nav Position:</strong></label>&nbsp;&nbsp;");
 			echo("<select name=\"simpleFlickr_navposition\" id=\"simpleFlickr_navposition\">");
 			echo("<option value=\"bottom\""); 
@@ -773,7 +792,8 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 		$default_height = $simpleFlickrOptionsDB['HEIGHT'];
 		$default_quality = $simpleFlickrOptionsDB['QUALITY'];
 		$default_bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
-
+		$default_bgtransparent = $simpleFlickrOptionsDB['BGTRANSPARENT'];
+		
 		// Fill with defaults if no DB value was given
 		if(empty($default_width)) 
 			$default_width = SIMPLEFLICKR_DEFAULT_WIDTH;
@@ -783,13 +803,16 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 			$default_quality = SIMPLEFLICKR_DEFAULT_QUALITY;
 		if(empty($default_bgcolor)) 
 			$default_bgcolor = SIMPLEFLICKR_DEFAULT_BGCOLOR;
+		if(empty($default_bgtransparent)) 
+			$default_bgtransparent = SIMPLEFLICKR_DEFAULT_BGTRANSPARENT;
 			
 		// Load some defaults if value not given
 		if(empty($width))	$width = $default_width; 
 		if(empty($height))	$height = $default_height;
 		if(empty($quality))	$quality = $default_quality;
 		if(empty($bgcolor))	$bgcolor = $default_bgcolor;
-
+		if(empty($bgtransparent))	$bgtransparent = $default_bgtransparent;
+		
 		// Combine the simpleviewer parameters
 		$params[] = $showrecent;	
 		$params[] = $set;
@@ -813,7 +836,12 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 		$params[] = $privacyfilter;
 		
 		$parameters = join(",", $params);
-		
+		$background_setting = '", bgcolor:"' . $bgcolor;	
+		if($bgtransparent == "true"){ 
+			$background_setting = '", wmode:"transparent';
+			$params[] = array('wmode' => 'transparent');
+			$params['bgcolor'] = null;
+		}
 		// Create the script
 		$output	= array();
 		$output[] = '<div id="SF_' . $rand . '_Viewer" class="flashmovie">';
@@ -825,7 +853,7 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 		$output[] = '';
 		$output[] = '// <![CDATA[';
 		$output[] = '';
-		$output[] = 'var SF_' . $rand . ' = { movie:"' . $this->get_plugin_uri() . 'viewer.swf", width:"' . $width . '", height:"' . $height . '", bgcolor:"' . $bgcolor . '", quality:"' . $quality . '", majorversion:"9", build:"0", xi:"true", base:"' . $this->get_plugin_uri() . '", flashvars:"xmlDataPath=' . $this->get_plugin_uri() . 'simpleFlickr.php?parameters=' . $parameters . '", ximovie:"' . $this->get_plugin_uri()  . 'ufo/ufo.swf" };';
+		$output[] = 'var SF_' . $rand . ' = { movie:"' . $this->get_plugin_uri() . 'viewer.swf", width:"' . $width . '", height:"' . $height . $background_setting . '", quality:"' . $quality . '", majorversion:"9", build:"0", xi:"true", base:"' . $this->get_plugin_uri() . '", flashvars:"xmlDataPath=' . $this->get_plugin_uri() . 'simpleFlickr.php?parameters=' . $parameters . '", ximovie:"' . $this->get_plugin_uri()  . 'ufo/ufo.swf" };';
 		$output[] = 'UFO.create(SF_' . $rand . ', "SF_' . $rand . '_Viewer");';
 		$output[] = '';
 		$output[] = '// ]]>';
