@@ -1,9 +1,9 @@
 === SimpleFlickr ===
 Contributors: joshgerdes
-Donate link: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
-Tags: images, flickr, simpleviewer, gallery
+Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
+Tags: images, flickr, simpleviewer, gallery, image, simpleflickr, photos, photo
 Requires at least: 2.0
-Tested up to: 2.3.1
+Tested up to: 2.5
 Stable tag: 2.5.2
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
@@ -14,7 +14,7 @@ This is a plugin for Wordpress that I wrote which allows you to embed a flickr i
 simpleviewer into your Wordpress site.  It is my first attempt at a Wordpress plugin so 
 please let me know if you have any issues using it.  
 
-Please visit [the official website](http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/ "SimpleFlickr") for the latest information on this plugin.
+Please visit [the official website](http://www.joshgerdes.com/projects/simpleflickr-plugin/ "SimpleFlickr") for the latest information on this plugin.
 
 == Installation ==
 
@@ -29,11 +29,11 @@ Please visit [the official website](http://www.joshgerdes.com/blog/projects/simp
 
 = Where can I get more information? =
 
-Please visit [the official website](http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/ "SimpleFlickr") for the latest information on this plugin.
+Please visit [the official website](http://www.joshgerdes.com/projects/simpleflickr-plugin/ "SimpleFlickr") for the latest information on this plugin.
 
 = I love this plugin! How can I show the developer how much I appreciate his work? =
 
-Please visit [the official website](http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/ "SimpleFlickr") and let him know your care.
+Please visit [the official website](http://www.joshgerdes.com/projects/simpleflickr-plugin/ "SimpleFlickr") and let him know your care.
 
 == Screenshots ==
 
@@ -167,7 +167,7 @@ Special thanks to the developers and community around this great piece of softwa
 
 == Copyright == 
 
-Copyright (c) 2007 
+Copyright (c) 2007-2008 
 Released under the GPL license
 <http://www.gnu.org/licenses/gpl.txt>
 
