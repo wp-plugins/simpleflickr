@@ -1,13 +1,19 @@
 <?php
 /*
 Plugin Name: SimpleFlickr
-Plugin URI: http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/
+Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
+Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
+Version: 2.5.3
 Author: Josh Gerdes
-Version: 2.5.2
 Author URI: http://www.joshgerdes.com
+Contributors: joshgerdes
+Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
+Requires at least: 2.0
+Tested up to: 2.5
+Stable tag: 2.5.3
 
-Copyright (c) 2007
+Copyright (c) 2007-2008
 Released under the GPL license
 http://www.gnu.org/licenses/gpl.txt
 */ 
@@ -17,7 +23,7 @@ if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFli
 if(!class_exists("buttonsnap"))	require_once(dirname(__FILE__)."/buttonsnap/buttonsnap.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "2.5.2");
+define('SIMPLEFLICKR_VERSION', "2.5.3");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");

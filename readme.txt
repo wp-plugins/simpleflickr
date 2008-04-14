@@ -1,10 +1,16 @@
 === SimpleFlickr ===
-Contributors: joshgerdes
+Plugin Name: SimpleFlickr
+Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
-Tags: images, flickr, simpleviewer, gallery, image, simpleflickr, photos, photo
+Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
+Version: 2.5.3
+Author: Josh Gerdes
+Author URI: http://www.joshgerdes.com
+Contributors: joshgerdes
+Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
 Requires at least: 2.0
 Tested up to: 2.5
-Stable tag: 2.5.2
+Stable tag: 2.5.3
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -40,6 +46,10 @@ Please visit [the official website](http://www.joshgerdes.com/projects/simplefli
 1. An Example of how SimpleFlickr displays in a page or post.
 
 == Release Notes ==
+
+*Version 2.5.3*:
+
+*  Updated and tested with Wordpress 2.5
 
 *Version 2.5.2*:
 
