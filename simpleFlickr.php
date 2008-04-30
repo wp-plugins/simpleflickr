@@ -4,14 +4,14 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
-Version: 2.5.3
+Version: 3.0
 Author: Josh Gerdes
 Author URI: http://www.joshgerdes.com
 Contributors: joshgerdes
 Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
 Requires at least: 2.0
-Tested up to: 2.5
-Stable tag: 2.5.3
+Tested up to: 2.5.1
+Stable tag: 3.0
 
 Copyright (c) 2007-2008
 Released under the GPL license
@@ -20,106 +20,36 @@ http://www.gnu.org/licenses/gpl.txt
 
 // Required libraries
 if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFlickr.php");
-if(!class_exists("buttonsnap"))	require_once(dirname(__FILE__)."/buttonsnap/buttonsnap.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "2.5.3");
+define('SIMPLEFLICKR_VERSION', "3.0");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
 define('SIMPLEFLICKR_TOKEN_NAME', "simpleflickr_token");
 
 // Default tag values
-define('SIMPLEFLICKR_DEFAULT_WIDTH', "100%");
-define('SIMPLEFLICKR_DEFAULT_HEIGHT', "800");
+define('SIMPLEFLICKR_DEFAULT_WIDTH', "480");
+define('SIMPLEFLICKR_DEFAULT_HEIGHT', "680");
 define('SIMPLEFLICKR_DEFAULT_QUALITY', "best");
 define('SIMPLEFLICKR_DEFAULT_BGCOLOR', "#FFFFFF");
-define('SIMPLEFLICKR_DEFAULT_BGTRANSPARENT', "false");
-define('SIMPLEFLICKR_DEFAULT_NAVPOSITION', "bottom");
-define('SIMPLEFLICKR_DEFAULT_MAXIMAGEWIDTH', "500");
-define('SIMPLEFLICKR_DEFAULT_MAXIMAGEHEIGHT', "300");
-define('SIMPLEFLICKR_DEFAULT_TEXTCOLOR', "0x000000");
-define('SIMPLEFLICKR_DEFAULT_FRAMECOLOR', "0xBBBBBB");
-define('SIMPLEFLICKR_DEFAULT_FRAMEWIDTH', "15");
-define('SIMPLEFLICKR_DEFAULT_STAGEPADDING', "40");
-define('SIMPLEFLICKR_DEFAULT_THUMBNAILCOLUMNS', "3");
-define('SIMPLEFLICKR_DEFAULT_THUMBNAILROWS', "3");
-define('SIMPLEFLICKR_DEFAULT_ENABLERIGHTCLICKOPEN', "true");
-define('SIMPLEFLICKR_DEFAULT_SHOWRECENT', "false");
-define('SIMPLEFLICKR_DEFAULT_COUNT', "0");
-define('SIMPLEFLICKR_DEFAULT_SHOWIMAGECAPTION', "true");
-define('SIMPLEFLICKR_DEFAULT_SHOWIMAGELINK', "true");
-define('SIMPLEFLICKR_DEFAULT_IMAGESIZE', "Medium");
-define('SIMPLEFLICKR_DEFAULT_IMAGELINKTEXT', "View flickr photo page...");
-define('SIMPLEFLICKR_DEFAULT_PRIVACYFILTER', "1");
+define('SIMPLEFLICKR_DEFAULT_WMODE', "window");
 
 class SimpleFlickrPlugin {
 	function SimpleFlickrPlugin() {
 	}
 	
 	function init_admin() {
-		// Apply the filter 
-		if (preg_match("/(\/\?feed=|\/feed)/i",$_SERVER['REQUEST_URI'])) {
-			// RSS Feeds
-			$request_type	= "feed";
-		} else {
-			// Everything else
-			$request_type	= "nonfeed";
-			add_action('wp_head', array(&$this, 'add_flashobject_js'));
-			add_action('edit_form_advanced', array(&$this, 'add_button_js'));
-			add_action('edit_page_form', array(&$this, 'add_button_js'));
-			add_action('init', array(&$this, 'addbuttons'));
-		}
+        // Add the JS to the head
+        add_action('wp_head', array(&$this, 'add_swfobject_js'));
 
+        // Add the sub-panel under the OPTIONS panel
+		add_action('admin_menu', array(&$this, 'admin_menu'));
+        
 		// Apply all over except the admin section
 		if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') === false ) {
-			add_filter('the_content', array(&$this, 'main_filter'));
+            add_filter('the_content', array(&$this, 'main_filter'));
 		}
-
-		// add the sub-panel under the OPTIONS panel
-		add_action('admin_menu', array(&$this, 'admin_menu'));
-	}
-
-	// Make our button on the write screens
-	function addbuttons() {
-		// Don't bother doing this stuff if the current user lacks permissions as they'll never see the pages
-		if ( !current_user_can('edit_posts') && !current_user_can('edit_pages') ) return;
-
-		// If WordPress 2.1+ and using TinyMCE, we need to insert the buttons differently
-		if ( class_exists('WP_Scripts') && 'true' == get_user_option('rich_editing') ) {
-			// Load and append our TinyMCE external plugin
-			add_filter('mce_plugins', array(&$this, 'mce_plugins'));
-			add_filter('mce_buttons', array(&$this, 'mce_buttons'));
-			add_action('tinymce_before_init', array(&$this, 'tinymce_before_init'));
-		} else {
-			buttonsnap_separator();
-			buttonsnap_jsbutton($this->get_plugin_uri() . 'buttonsnap/images/flickr.png', __('SimpleFlickr', 'sfq'), 'SimpleFlickrInsertSet("http://flickr.com/photos/joshgerdes/sets/72157594408754918/", "simpleflickr");');
-			
-		}
-	}
-
-	// Add buttons in WordPress v2.1+, thanks to An-archos
-	function mce_plugins($plugins) {
-		array_push($plugins, 'simpleflickr');
-		return $plugins;
-	}
-
-	function mce_buttons($buttons) {
-		if ( 1 == $this->settings['tinymce_linenumber'] ) array_push($buttons, 'separator');
-
-		array_push($buttons, 'simpleflickr');
-		return $buttons;
-	}
-
-	function tinymce_before_init() {
-		echo 'tinyMCE.loadPlugin("simpleflickr", "' . $this->get_plugin_uri() . 'buttonsnap/tinymce/");';
-	}
-
-	function add_button_js() {
-		echo('
-		<!-- Added by SimpleFlickr - Version '. SIMPLEFLICKR_VERSION . ' -->
-		<script src="' . $this->get_plugin_uri() . 'simpleFlickr.js" type="text/javascript"></script>
-		');
 	}
 
 	function get_image() {
@@ -163,10 +93,10 @@ class SimpleFlickrPlugin {
 	   exit;
 	}
 	
-	function add_flashobject_js() {
+	function add_swfobject_js() {
 		echo('
 		<!-- Added by SimpleFlickr - Version '. SIMPLEFLICKR_VERSION . ' -->
-		<script src="' . $this->get_plugin_uri() . 'ufo/ufo.js" type="text/javascript"></script>
+		<script src="' . $this->get_plugin_uri() . 'swfobject/swfobject.js" type="text/javascript"></script>
 		');
 	}
 	
@@ -180,7 +110,7 @@ class SimpleFlickrPlugin {
 			add_options_page('SimpleFlickr Options', 'SimpleFlickr', 8, basename(__FILE__), array(&$this, 'options_subpanel'));
 	    }
 	}
-	
+    
 	function options_subpanel() {
 	
 		// Create the phpFlickr object
@@ -241,488 +171,660 @@ class SimpleFlickrPlugin {
             }
         }
 
+        // Create base HTML
+        $html_output = '';
+        $html_output .= '<div class="wrap">'. PHP_EOL;
+        
 		// Display errors, if any
 		if(isset($error) && $error != '') {
-			echo('<div class="error"><p><strong>Error: </strong> ' . $error . '</p></div>');
+			$html_output .= '<div class="error"><p><strong>Error: </strong> ' . $error . '</p></div>'. PHP_EOL;
 		}
 		
+        // Get the field values
+        if(isset($_POST['info_update'])) {
+            
+            // Get the values from the form
+            
+            // Flickr Options
+            $simpleflickr_count = trim($_POST['simpleflickr_count']);
+            $simpleflickr_showrecent = trim($_POST['simpleflickr_showrecent']);
+            $simpleflickr_imagesize = trim($_POST['simpleflickr_imagesize']);
+            $simpleflickr_privacyfilter = trim($_POST['simpleflickr_privacyfilter']);
+            
+            // Flash Options
+            $simpleflickr_width = trim($_POST['simpleflickr_width']);
+            $simpleflickr_height = trim($_POST['simpleflickr_height']);
+            $simpleflickr_quality = trim($_POST['simpleflickr_quality']);
+            $simpleflickr_bgcolor = trim($_POST['simpleflickr_bgcolor']);
+            $simpleflickr_wmode = trim($_POST['simpleflickr_wmode']);
+            
+            // SimpleViewer Options
+            $simpleflickr_maximagewidth = trim($_POST['simpleflickr_maximagewidth']);
+            $simpleflickr_maximageheight = trim($_POST['simpleflickr_maximageheight']);
+            $simpleflickr_textcolor = trim($_POST['simpleflickr_textcolor']);
+            $simpleflickr_framecolor = trim($_POST['simpleflickr_framecolor']);
+            $simpleflickr_framewidth = trim($_POST['simpleflickr_framewidth']);
+            $simpleflickr_stagepadding = trim($_POST['simpleflickr_stagepadding']);
+            $simpleflickr_navpadding = trim($_POST['simpleflickr_navpadding']);
+            $simpleflickr_thumbnailcolumns = trim($_POST['simpleflickr_thumbnailcolumns']);
+            $simpleflickr_thumbnailrows = trim($_POST['simpleflickr_thumbnailrows']);
+            $simpleflickr_navposition = trim($_POST['simpleflickr_navposition']);
+            $simpleflickr_valign = trim($_POST['simpleflickr_valign']);
+            $simpleflickr_halign = trim($_POST['simpleflickr_halign']);
+            $simpleflickr_title = trim($_POST['simpleflickr_title']);
+            $simpleflickr_enablerightclickopen = trim($_POST['simpleflickr_enablerightclickopen']);
+            $simpleflickr_backgroundimagepath = trim($_POST['simpleflickr_backgroundimagepath']);
+            $simpleflickr_firstimageindex = trim($_POST['simpleflickr_firstimageindex']);
+            $simpleflickr_langopenimage = trim($_POST['simpleflickr_langopenimage']);
+            $simpleflickr_langabout = trim($_POST['simpleflickr_langabout']);
+            $simpleflickr_preloadercolor = trim($_POST['simpleflickr_preloadercolor']);
+            
+            // Additional Options
+            $simpleflickr_showimagecaption = trim($_POST['simpleflickr_showimagecaption']);
+            $simpleflickr_imagecaptionlink = trim($_POST['simpleflickr_imagecaptionlink']);
+            $simpleflickr_imagecaptionstyle = str_replace(",", "", trim($_POST['simpleflickr_imagecaptionstyle']));
+            
+            // Alternate Options
+            $simpleflickr_xmldatapath = trim($_POST['simpleflickr_xmldatapath']);
+
+
+            // Add values to a new array to save
+            $simpleFlickrOptionsNewArr = array();
+            
+            // Flickr Options
+            $simpleFlickrOptionsNewArr['COUNT'] = $simpleflickr_count;
+            $simpleFlickrOptionsNewArr['SHOW_RECENT'] = $simpleflickr_showrecent;
+            $simpleFlickrOptionsNewArr['IMAGE_SIZE'] = $simpleflickr_imagesize;
+            $simpleFlickrOptionsNewArr['PRIVACY_FILTER'] = $simpleflickr_privacyfilter;
+            
+            // Flash Options
+            $simpleFlickrOptionsNewArr['WIDTH'] = $simpleflickr_width;
+            $simpleFlickrOptionsNewArr['HEIGHT'] = $simpleflickr_height;
+            $simpleFlickrOptionsNewArr['QUALITY'] = $simpleflickr_quality;
+            $simpleFlickrOptionsNewArr['BGCOLOR'] = $simpleflickr_bgcolor;
+            $simpleFlickrOptionsNewArr['WMODE'] = $simpleflickr_wmode;
+            
+            // SimpleViewer Options
+            $simpleFlickrOptionsNewArr['MAX_IMAGE_WIDTH'] = $simpleflickr_maximagewidth;
+            $simpleFlickrOptionsNewArr['MAX_IMAGE_HEIGHT'] = $simpleflickr_maximageheight;
+            $simpleFlickrOptionsNewArr['TEXT_COLOR'] = $simpleflickr_textcolor;
+            $simpleFlickrOptionsNewArr['FRAME_COLOR'] = $simpleflickr_framecolor;
+            $simpleFlickrOptionsNewArr['FRAME_WIDTH'] = $simpleflickr_framewidth;
+            $simpleFlickrOptionsNewArr['STAGE_PADDING'] = $simpleflickr_stagepadding;
+            $simpleFlickrOptionsNewArr['NAV_PADDING'] = $simpleflickr_navpadding;
+            $simpleFlickrOptionsNewArr['THUMBNAIL_COLUMNS'] =  $simpleflickr_thumbnailcolumns;
+            $simpleFlickrOptionsNewArr['THUMBNAIL_ROWS'] = $simpleflickr_thumbnailrows;
+            $simpleFlickrOptionsNewArr['NAV_POSITION'] = $simpleflickr_navposition;
+            $simpleFlickrOptionsNewArr['VALIGN'] = $simpleflickr_valign;
+            $simpleFlickrOptionsNewArr['HALIGN'] = $simpleflickr_halign;
+            $simpleFlickrOptionsNewArr['TITLE'] = $simpleflickr_title;
+            $simpleFlickrOptionsNewArr['ENABLE_RIGHT_CLICK_OPEN'] = $simpleflickr_enablerightclickopen;
+            $simpleFlickrOptionsNewArr['BACKGROUND_IMAGE_PATH'] = $simpleflickr_backgroundimagepath;
+            $simpleFlickrOptionsNewArr['FIRST_IMAGE_INDEX'] = $simpleflickr_firstimageindex;
+            $simpleFlickrOptionsNewArr['LANG_OPEN_IMAGE'] = $simpleflickr_langopenimage;
+            $simpleFlickrOptionsNewArr['LANG_ABOUT'] = $simpleflickr_langabout;
+            $simpleFlickrOptionsNewArr['PRELOADER_COLOR'] = $simpleflickr_preloadercolor;
+            
+            // Additional Options
+            $simpleFlickrOptionsNewArr['SHOW_IMAGE_CAPTION'] = $simpleflickr_showimagecaption;
+            $simpleFlickrOptionsNewArr['IMAGE_CAPTION_LINK'] = $simpleflickr_imagecaptionlink;
+            $simpleFlickrOptionsNewArr['IMAGE_CAPTION_STYLE'] = $simpleflickr_imagecaptionstyle;
+            
+            // Alternate Options
+            $simpleFlickrOptionsNewArr['XML_DATA_PATH'] = $simpleflickr_xmldatapath;
+            
+            // Save new array to DB
+            update_option(SIMPLEFLICKR_OPTIONS_NAME, $simpleFlickrOptionsNewArr);
+            
+            // Display success if updated
+            $html_output .= '<div class="updated"><p><strong>Successfully Saved Settings</strong></p></div>'. PHP_EOL;
+        }
+        else
+        {  
+            // Get values from DB
+            $simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
+            
+            // Flickr Options
+            $simpleflickr_count = $simpleFlickrOptionsDB['COUNT'];
+            $simpleflickr_showrecent = $simpleFlickrOptionsDB['SHOW_RECENT'];
+            $simpleflickr_imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
+            $simpleflickr_privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
+            
+            // Flash Options
+            $simpleflickr_width = $simpleFlickrOptionsDB['WIDTH'];
+            $simpleflickr_height = $simpleFlickrOptionsDB['HEIGHT'];
+            $simpleflickr_quality = $simpleFlickrOptionsDB['QUALITY'];
+            $simpleflickr_bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
+            $simpleflickr_wmode = $simpleFlickrOptionsDB['WMODE'];
+            
+            // SimpleViewer Options
+            $simpleflickr_maximagewidth = $simpleFlickrOptionsDB['MAX_IMAGE_WIDTH'];
+            $simpleflickr_maximageheight = $simpleFlickrOptionsDB['MAX_IMAGE_HEIGHT'];
+            $simpleflickr_textcolor = $simpleFlickrOptionsDB['TEXT_COLOR'];
+            $simpleflickr_framecolor = $simpleFlickrOptionsDB['FRAME_COLOR'];
+            $simpleflickr_framewidth = $simpleFlickrOptionsDB['FRAME_WIDTH'];
+            $simpleflickr_stagepadding = $simpleFlickrOptionsDB['STAGE_PADDING'];
+            $simpleflickr_navpadding = $simpleFlickrOptionsDB['NAV_PADDING'];
+            $simpleflickr_thumbnailcolumns = $simpleFlickrOptionsDB['THUMBNAIL_COLUMNS'];
+            $simpleflickr_thumbnailrows = $simpleFlickrOptionsDB['THUMBNAIL_ROWS'];
+            $simpleflickr_navposition = $simpleFlickrOptionsDB['NAV_POSITION'];
+            $simpleflickr_valign = $simpleFlickrOptionsDB['VALIGN'];
+            $simpleflickr_halign = $simpleFlickrOptionsDB['HALIGN'];
+            $simpleflickr_title = $simpleFlickrOptionsDB['TITLE'];
+            $simpleflickr_enablerightclickopen = $simpleFlickrOptionsDB['ENABLE_RIGHT_CLICK_OPEN'];
+            $simpleflickr_backgroundimagepath = $simpleFlickrOptionsDB['BACKGROUND_IMAGE_PATH'];
+            $simpleflickr_firstimageindex = $simpleFlickrOptionsDB['FIRST_IMAGE_INDEX'];
+            $simpleflickr_langopenimage = $simpleFlickrOptionsDB['LANG_OPEN_IMAGE'];
+            $simpleflickr_langabout = $simpleFlickrOptionsDB['LANG_ABOUT'];
+            $simpleflickr_preloadercolor = $simpleFlickrOptionsDB['PRELOADER_COLOR'];
+            
+            // Additional Options
+            $simpleflickr_showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
+            $simpleflickr_imagecaptionlink = $simpleFlickrOptionsDB['IMAGE_CAPTION_LINK'];
+            $simpleflickr_imagecaptionstyle = $simpleFlickrOptionsDB['IMAGE_CAPTION_STYLE'];
+            
+            // Alternate Options
+            $simpleflickr_xmldatapath = $simpleFlickrOptionsDB['XML_DATA_PATH'];
+        }
+        
+        // Add HTML for header
+        $html_output .= '<h2>SimpleFlickr (v' . SIMPLEFLICKR_VERSION . ') Settings</h2>'. PHP_EOL;
+        $html_output .= '<div style="float:right;width:300px;background:#eee;border:1px solid #999;padding:10px;font-size:0.9em;margin-left:10px;">'. PHP_EOL;
+        $html_output .= '<h4>Enjoying this Plugin?</h4>'. PHP_EOL;
+        $html_output .= '<p>If you like this plugin, and wish to contribute to its development, consider making a donation.</p>'. PHP_EOL;
+        $html_output .= '<form action="https://www.paypal.com/cgi-bin/webscr" method="post">'. PHP_EOL;
+        $html_output .= '<input type="hidden" name="cmd" value="_s-xclick" />'. PHP_EOL;
+        $html_output .= '<input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border-width=\'0\';" name="submit" alt="Make payments with PayPal - it is fast, free and secure!" />'. PHP_EOL;
+        $html_output .= '<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />'. PHP_EOL;
+        $html_output .= '<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
+" />';
+        $html_output .= '</form></div>'. PHP_EOL;
+
+        $html_output .= '<p>This is a plugin for Wordpress which allows you to display images from a Flickr account by emdedding the SimpleViewer flash application into your Wordpress site.  Please visit the <a href="http://www.joshgerdes.com/projects/simpleflickr-plugin/" target="_blank">official website</a> for the latest information on this plugin.</p>'. PHP_EOL;
+
+        $html_output .= '<br clear="all" />'. PHP_EOL;
+        $html_output .= '<form class="form-table" name="dofollow" action="" method="post">'. PHP_EOL;
+            
+        
+        // Create HTML for flickr options
+        $html_flickroptions = array();
+        $html_flickroptions[] = '<h3>Flickr Options</h3>';
+        $html_flickroptions[] = '<p>The following options are related to how the plugin accesses and retrieves images from flickr.</p>';
+
+        $html_flickroptions[] = '<p><strong>Current Authorized Flickr User:</strong>&nbsp;<a href="'. $photos_url .'" target="_blank">'. $username .'</a>&nbsp;&nbsp;<input type="submit" name="Reset" value="Reset Flickr Authorization" /></p>';
+
+        $html_flickroptions[] = '<table class="form-table">';
+        $html_flickroptions[] = '<tr valign="top">';
+        $html_flickroptions[] = '<th scope="row">Photo Count (count)</th>';
+        $html_flickroptions[] = '<td><input name="simpleflickr_count" id="simpleflickr_count" type="text" value="'. $simpleflickr_count .'" size="4" maxlength="3" />';
+        $html_flickroptions[] = '<br />';
+        $html_flickroptions[] = 'The number of images to be displayed. The maximum number the flickr API allows is 500. For unlimited set to \'0\'.  Default is \'0\'. ';
+        $html_flickroptions[] = '</td>';
+        $html_flickroptions[] = '</tr>';
+        $html_flickroptions[] = '<tr valign="top">';
+        $html_flickroptions[] = '<th scope="row">Show Recent Photos (showrecent)</th>';
+        $html_flickroptions[] = '<td><select name="simpleflickr_showrecent" id="simpleflickr_showrecent">';
+        $option = '<option value="false"';
+        if($simpleflickr_showrecent=='false')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>False</option>';
+        $option = '<option value="true"';
+        if($simpleflickr_showrecent=='true')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>True</option>';
+        $html_flickroptions[] = '</select>';
+        $html_flickroptions[] = '<br />';
+        $html_flickroptions[] = 'Determines the user\'s recent photos are displayed by default. This option takes precedences over the \'set\' and \'group\' options. So, if this is set to true then your recent photos will be displayed even if you have added the \'set\' or \'group\' attribute to the tag. Default is \'false\'.'; 
+        $html_flickroptions[] = '</td>';
+        $html_flickroptions[] = '</tr>';
+        $html_flickroptions[] = '<tr valign="top">';
+        $html_flickroptions[] = '<th scope="row">Image Size (imagesize)</th>';
+        $html_flickroptions[] = '<td><select name="simpleflickr_imagesize" id="simpleflickr_imagesize">';
+        $option = '	<option value="Medium"'; 
+        if($simpleflickr_imagesize=='Medium')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Medium</option>';
+        $option = '	<option value="Square" '; 
+        if($simpleflickr_imagesize=='Square')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Square</option>';
+        $option = '	<option value="Thumbnail"'; 
+        if($simpleflickr_imagesize=='Thumbnail')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Thumbnail</option>';
+        $option = '	<option value="Small"'; 
+        if($simpleflickr_imagesize=='Small')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Small</option>';
+        $option = '	<option value="Large"'; 
+        if($simpleflickr_imagesize=='Large')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Large</option>';
+        $option = '	<option value="Original"'; 
+        if($simpleflickr_imagesize=='Original')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Original</option>';
+        $html_flickroptions[] = '</select>'; 
+        $html_flickroptions[] = '<br />'; 
+        $html_flickroptions[] = 'You must provide the size of the image displayed in the simpleviewer flash object. Can be \'Square\', \'Thumbnail\', \'Small\', \'Medium\', \'Large\', \'Original\'. Default is \'Medium\'.';  
+        $html_flickroptions[] = '</td>'; 
+        $html_flickroptions[] = '</tr>'; 
+        $html_flickroptions[] = '<tr valign="top">'; 
+        $html_flickroptions[] = '<th scope="row">Privacy Filter (privacyfilter)</th>'; 
+        $html_flickroptions[] = '<td><select name="simpleflickr_privacyfilter" id="simpleflickr_privacyfilter">'; 
+        $option = '   <option value="1"'; 
+        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Public photos</option>'; 
+        $option = '    <option value="2"'; 
+        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Private photos visible to friends</option>'; 
+        $option = '    <option value="3"'; 
+        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Private photos visible to family</option>'; 
+        $option = '    <option value="4"'; 
+        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Private photos visible to friends &amp; family</option>'; 	
+        $option = '    <option value="5"'; 
+        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        $html_flickroptions[] = $option .'>Completely private photos</option>'; 
+        $html_flickroptions[] = '</select>'; 
+        $html_flickroptions[] = '<br />'; 
+        $html_flickroptions[] = 'Determines what photos are displayed based on the level of privacy selected. Values can be \'Public photos\', \'Private photos visible to friends\', \'Private photos visible to family\', \'Private photos visible to friends &amp; family\', \'Completely private photos\'. Default is \'Public photos\'. '; 
+        $html_flickroptions[] = '</td>'; 
+        $html_flickroptions[] = '</tr>'; 
+        $html_flickroptions[] = '</table>'; 
+
+        // Create HTML for flash options
+        $html_flashoptions = array();
+        $html_flashoptions[] = '<h3>Flash Object Options</h3>'; 
+        $html_flashoptions[] = '<p>The following options are general options related to the flash object displayed by this plugin.</p>'; 
+        $html_flashoptions[] = '<table class="form-table">'; 
+        $html_flashoptions[] = '<tr valign="top">'; 
+        $html_flashoptions[] = '<th scope="row">Width (width)</th>'; 
+        $html_flashoptions[] = '<td><input name="simpleflickr_width" id="simpleflickr_width" type="text" value="'. $simpleflickr_width .'" size="4" maxlength="4" />'; 
+        $html_flashoptions[] = '<br />'; 
+        $html_flashoptions[] = 'Specifies the width of the movie in either pixels or percentage of browser window. Default is \'480\'. '; 
+        $html_flashoptions[] = '</td>'; 
+        $html_flashoptions[] = '</tr>'; 
+        $html_flashoptions[] = '<tr valign="top">'; 
+        $html_flashoptions[] = '<th scope="row">Height (height)</th>'; 
+        $html_flashoptions[] = '<td><input name="simpleflickr_height" id="simpleflickr_height" type="text" value="'. $simpleflickr_height .'" size="4" maxlength="4" />'; 
+        $html_flashoptions[] = '<br />'; 
+        $html_flashoptions[] = 'Specifies the height of the movie in either pixels or percentage of browser window. Default is \'680\'.';  
+        $html_flashoptions[] = '</td>'; 
+        $html_flashoptions[] = '</tr>'; 
+        $html_flashoptions[] = '<tr valign="top">'; 
+        $html_flashoptions[] = '<th scope="row">Quality (quality)</th>'; 
+        $html_flashoptions[] = '<td><select name="simpleflickr_quality" id="simpleflickr_quality">'; 
+        $option = '    <option value="best"'; 
+        if($simpleflickr_quality=='best')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Best</option>'; 
+        $option = '    <option value="high"'; 
+        if($simpleflickr_quality=='high')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>High</option>'; 
+        $option = '    <option value="medium"'; 
+        if($simpleflickr_quality=='medium')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Medium</option>'; 
+        $option = '    <option value="autohigh"'; 
+        if($simpleflickr_quality=='autohigh')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Autohigh</option>'; 
+        $option = '    <option value="autolow"'; 
+        if($simpleflickr_quality=='autolow')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Autolow</option>'; 
+        $option = '    <option value="low"'; 
+        if($simpleflickr_quality=='low')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Low</option>'; 
+        $html_flashoptions[] = '</select>'; 
+        $html_flashoptions[] = '<br />'; 
+        $html_flashoptions[] = 'Specifies the quality of the simpleviewer flash object. Can be \'low\', \'high\', \'autolow\', \'autohigh\', \'best\'. Default is \'best\'. '; 
+        $html_flashoptions[] = '</td>'; 
+        $html_flashoptions[] = '</tr>'; 
+        $html_flashoptions[] = '<tr valign="top">'; 
+        $html_flashoptions[] = '<th scope="row">Background Color (bgcolor)</th>'; 
+        $html_flashoptions[] = '<td><input name="simpleflickr_bgcolor" id="simpleflickr_bgcolor" type="text" value="'. $simpleflickr_bgcolor .'" size="7" maxlength="7" />'; 
+        $html_flashoptions[] = '<br />'; 
+        $html_flashoptions[] = 'Specifies the background color (hexidecimal color value e.g #FF00FF) of the movie. This attribute does not affect the background color of the HTML page. Default is #FFFFFF. Is ignored if <strong>Window Mode</strong> is set to \'transparent\'. '; 
+        $html_flashoptions[] = '</td>'; 
+        $html_flashoptions[] = '</tr>'; 
+        $html_flashoptions[] = '<tr valign="top">'; 
+        $html_flashoptions[] = '<th scope="row">Window Mode (wmode)</th>'; 
+        $html_flashoptions[] = '<td><select name="simpleflickr_wmode" id="simpleflickr_wmode">'; 
+        $option = '    <option value="window"';
+        if($simpleflickr_wmode=='window')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Window</option>'; 
+        $option = '    <option value="opaque"';
+        if($simpleflickr_wmode=='opaque')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Opaque</option>'; 
+        $option = '    <option value="transparent"';
+        if($simpleflickr_wmode=='transparent')	$option .= ' selected="selected"';
+        $html_flashoptions[] = $option .'>Transparent</option>'; 
+        $html_flashoptions[] = '</select>'; 
+        $html_flashoptions[] = '<br />'; 
+        $html_flashoptions[] = 'Sets the Window Mode property of the Flash movie for transparency, layering, and positioning in the browser. Can be \'window\', \'opaque\', \'transparent\'. Default is \'window\'. Overrides <strong>Background Color</strong> if set to \'transparent\'.'; 
+        $html_flashoptions[] = '</td>'; 
+        $html_flashoptions[] = '</tr>'; 
+        $html_flashoptions[] = '</table>'; 
+
+        // Create HTML for simpleviewer options
+        $html_simplevieweroptions = array();
+        $html_simplevieweroptions[] = '<h3>SimpleViewer Options</h3>'; 
+        $html_simplevieweroptions[] = '<p>This plugin uses the SimpleViewer flash application for displaying images from Flickr.  SimpleViewer can be customized by setting the following options.  Please visit the <a href="http://www.airtightinteractive.com/simpleviewer/options.html" target="_blank">SimpleViewer Options Page</a> for more details.</p>'; 
+        $html_simplevieweroptions[] = '<table class="form-table">'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Max Image Width (maximagewidth)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_maximagewidth" id="simpleflickr_maximagewidth" type="text" value="'. $simpleflickr_maximagewidth .'" size="4" maxlength="4" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Width of the widest image in the gallery. Used to determine the best layout for your gallery (pixels). Default is \'480\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Max Image Height (maximageheight)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_maximageheight" id="simpleflickr_maximageheight" type="text" value="'. $simpleflickr_maximageheight .'" size="4" maxlength="4" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Height of tallest image in the gallery. Used to determine the best layout for your gallery (pixels).  Default is \'680\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Text Color (textcolor)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_textcolor" id="simpleflickr_textcolor" type="text" value="'. $simpleflickr_textcolor .'" size="8" maxlength="8" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Color of title and caption text (hexidecimal color e.g. 0xFF00FF).  Default is \'0xFFFFFF\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Frame Color (framecolor)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_framecolor" id="simpleflickr_framecolor" type="text" value="'. $simpleflickr_framecolor .'" size="8" maxlength="8" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Color of image frame, navigation buttons and thumbnail frame (hexidecimal color value e.g. 0xFF00FF).  Default is \'0xFFFFFF\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Frame Width (framewidth)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_framewidth" id="simpleflickr_framewidth" type="text" value="'. $simpleflickr_framewidth .'" size="4" maxlength="4" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Width of image frame (pixels). Default is \'20\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Stage Padding (stagepadding)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_stagepadding" id="simpleflickr_stagepadding" type="text" value="'. $simpleflickr_stagepadding .'" size="4" maxlength="4" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Width of padding around gallery edge (pixels). To have the image flush to the edge of the swf, set this to \'0\'.  Default is \'40\'. '; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Nav Padding (navpadding)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_navpadding" id="simpleflickr_navpadding" type="text" value="'. $simpleflickr_navpadding .'" size="4" maxlength="4" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Distance between image and thumbnails (pixels).  Default is \'40\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Thumbnail Columns (thumbnailcolumns)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_thumbnailcolumns" id="simpleflickr_thumbnailcolumns" type="text" value="'. $simpleflickr_thumbnailcolumns .'" size="4" maxlength="3" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Number of thumbnail columns. To disable thumbnails completely set this value to \'0\'.  Default is \'3\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Thumbnail Rows (thumbnailrows)</th>'; 
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_thumbnailrows" id="simpleflickr_thumbnailrows" type="text" value="'. $simpleflickr_thumbnailrows .'" size="4" maxlength="3" />'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Number of thumbnail rows. To disable thumbnails completely set this value to \'0\'.  Default is \'3\'.'; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>'; 
+        $html_simplevieweroptions[] = '<tr valign="top">'; 
+        $html_simplevieweroptions[] = '<th scope="row">Nav Position (navposition)</th>'; 
+        $html_simplevieweroptions[] = '<td><select name="simpleflickr_navposition" id="simpleflickr_navposition">'; 
+        $option = '    <option value="left"';
+        if($simpleflickr_navposition=='left')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Left</option>'; 
+        $option = '    <option value="right"';
+        if($simpleflickr_navposition=='right')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Right</option>'; 
+        $option = '    <option value="bottom"';
+        if($simpleflickr_navposition=='bottom')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Bottom</option>'; 
+        $option = '    <option value="top"';
+        if($simpleflickr_navposition=='top')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Top</option>'; 
+        $html_simplevieweroptions[] = '</select>'; 
+        $html_simplevieweroptions[] = '<br />'; 
+        $html_simplevieweroptions[] = 'Position of thumbnails relative to image. Can be \'top\', \'bottom\', \'left\' or \'right\'.  Default is \'left\'. '; 
+        $html_simplevieweroptions[] = '</td>'; 
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">Vertical Alignment (valign)</th>';
+        $html_simplevieweroptions[] = '<td><select name="simpleflickr_valign" id="simpleflickr_valign">';
+        $option = '    <option value="center"';
+        if($simpleflickr_valign=='center')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Center</option>';
+        $option = '    <option value="top"';
+        if($simpleflickr_valign=='top')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Top</option>';
+        $option = '    <option value="bottom"';
+        if($simpleflickr_valign=='bottom')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Bottom</option>';
+        $html_simplevieweroptions[] = '</select>';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Vertical placment of the image and thumbnails within the SWF. Can be \'center\', \'top\' or \'bottom\'.  Default is \'center\'. ';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'For large format galleries this is best set to \'center\'. For small format galleries setting this to \'top\' or \'bottom\' can help get the image flush to the edge of the swf.';
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">Horizontal Alignment (halign)</th>';
+        $html_simplevieweroptions[] = '<td><select name="simpleflickr_halign" id="simpleflickr_halign">';
+        $option = '    <option value="center"';
+        if($simpleflickr_halign=='center')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Center</option>';
+        $option = '    <option value="left"';
+        if($simpleflickr_halign=='left')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Left</option>';
+        $option = '    <option value="right"';
+        if($simpleflickr_halign=='right')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>Right</option>';
+        $html_simplevieweroptions[] = '</select>';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Horizontal placement of the image and thumbnails within the SWF. Can be \'center\', \'left\' or \'right\'.  Default is \'center\'.'; 
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'For large format galleries this is best set to \'center\'. For small format galleries setting this to \'left\' or \'right\' can help get the image flush to the edge of the swf.';
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">Title (title)</th>';
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_title" id="simpleflickr_title" style="width: 95%" type="text" value="'. $simpleflickr_title .'" size="45" />';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Text to display as gallery Title.  Default is blank.';
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">Enable Right Click Open (enablerightclickopen)</th>';
+        $html_simplevieweroptions[] = '<td><select name="simpleflickr_enablerightclickopen" id="simpleflickr_enablerightclickopen">';
+        $option = '    <option value="true"';
+        if($simpleflickr_enablerightclickopen=='true')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>True</option>';
+        $option = '    <option value="false"';
+        if($simpleflickr_enablerightclickopen=='false')	$option .= ' selected="selected"';
+        $html_simplevieweroptions[] = $option .'>False</option>';
+        $html_simplevieweroptions[] = '</select>';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Whether to display a \'Open In new Window...\' dialog when right-clicking on an image. Can be \'true\' or \'false\'.  Default is \'true\'.'; 
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">Background Image Path (backgroundimagepath)</th>';
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_backgroundimagepath" id="simpleflickr_backgroundimagepath" style="width: 95%" type="text" value="'. $simpleflickr_backgroundimagepath .'" size="45" />';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Relative or absolute path to a JPG or SWF to load as the gallery background.  Default is blank.';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Relative paths are relative to the HTML document that contains SimpleViewer. For example: \'images/bkgnd.jpg\'.'; 
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">First Image Index (firstimageindex)</th>';
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_firstImageIndex" id="simpleflickr_firstImageIndex" type="text" value="'. $simpleflickr_firstimageindex .'" size="4" maxlength="3" />';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Index of image to display when gallery loads. Images are numbered beginning at zero. You can use this option to display a specific number based on the URL. Default is \'0\'.';
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">Open Image Text (langopenimage)</th>';
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_langopenimage" id="simpleflickr_langopenimage" style="width: 95%" type="text" value="'. $simpleflickr_langopenimage .'" size="45" />';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'The text displayed for the right-click \'Open Image in New Window\' menu option. Can be used to translate SimpleViewer into a non-English language.  Default is \'Open Image in New Window\'.';
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">About Text (langabout)</th>';
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_langabout" id="simpleflickr_langabout" style="width: 95%" type="text" value="'. $simpleflickr_langabout .'" size="45" />';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'The text displayed for the right-click \'About\' menu option. Can be used to translate SimpleViewer into a non-English language.  Default is \'About\'.';
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '<tr valign="top">';
+        $html_simplevieweroptions[] = '<th scope="row">Preloader Color (preloadercolor)</th>';
+        $html_simplevieweroptions[] = '<td><input name="simpleflickr_preloadercolor" id="simpleflickr_preloadercolor" type="text" value="'. $simpleflickr_preloadercolor .'" size="8" maxlength="8" />';
+        $html_simplevieweroptions[] = '<br />';
+        $html_simplevieweroptions[] = 'Preloader color (hexidecimal color value).  Default is \'0xFFFFFF\'.';
+        $html_simplevieweroptions[] = '</td>';
+        $html_simplevieweroptions[] = '</tr>';
+        $html_simplevieweroptions[] = '</table>';
+
+        // Create HTML for Additional options
+        $html_additionaloptions = array();
+        $html_additionaloptions[] = '<h3>Additional Options</h3>';
+        $html_additionaloptions[] = '<p>The following are additional options to control how SimpleViewer displays images within this plugin.</p>';
+        $html_additionaloptions[] = '<table class="form-table">';
+        $html_additionaloptions[] = '<tr valign="top">';
+        $html_additionaloptions[] = '<th scope="row">Show Image Caption (showimagecaption)</th>';
+        $html_additionaloptions[] = '<td><select name="simpleflickr_showimagecaption" id="simpleflickr_showimagecaption">';
+        $option = '    <option value="true"';
+        if($simpleflickr_showimagecaption=='true')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>True</option>';
+        $option = '    <option value="false"';
+        if($simpleflickr_showimagecaption=='false')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>False</option>';
+        $html_additionaloptions[] = '</select>';
+        $html_additionaloptions[] = '<br />';
+        $html_additionaloptions[] = 'Specifies if the image caption is displayed. Can be \'true\' or \'false\'. Default is \'true\'. ';
+        $html_additionaloptions[] = '</td>';
+        $html_additionaloptions[] = '</tr>';
+        $html_additionaloptions[] = '<tr valign="top">';
+        $html_additionaloptions[] = '<th scope="row">Image Caption Link (imagecaptionlink)</th>';
+        $html_additionaloptions[] = '<td><select name="simpleflickr_imagecaptionlink" id="simpleflickr_imagecaptionlink">';
+        $option = '    <option value="true"';
+        if($simpleflickr_imagecaptionlink=='true')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>True</option>';
+        $option = '    <option value="false"';
+        if($simpleflickr_imagecaptionlink=='false')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>False</option>';
+        $html_additionaloptions[] = '</select>';
+        $html_additionaloptions[] = '<br />';
+        $html_additionaloptions[] = 'Specifies if the image caption text is a link to the flickr image page.  Can be \'true\' or \'false\'. Default is \'true\'. ';
+        $html_additionaloptions[] = '</td>';
+        $html_additionaloptions[] = '</tr>';
+        $html_additionaloptions[] = '<tr valign="top">';
+        $html_additionaloptions[] = '<th scope="row">Image Caption Style (imagecaptionstyle)</th>';
+        $html_additionaloptions[] = '<td><select name="simpleflickr_imagecaptionstyle" id="simpleflickr_imagecaptionstyle">';
+        $option = '    <option value="none"';
+        if($simpleflickr_imagecaptionstyle=='none')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>None</option>';
+        $option = '    <option value="bold"';
+        if($simpleflickr_imagecaptionstyle=='bold')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>Bold</option>';
+        $option = '    <option value="italic"';
+        if($simpleflickr_imagecaptionstyle=='italic')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>Italic</option>';
+        $option = '    <option value="underline"';
+        if($simpleflickr_imagecaptionstyle=='underline')	$option .= ' selected="selected"';
+        $html_additionaloptions[] = $option .'>Underline</option>';
+        $html_additionaloptions[] = '</select>';
+        $html_additionaloptions[] = '<br />';
+        $html_additionaloptions[] = 'Specifies the font style for the image caption text if displayed. Can be \'bold\', \'italic\', \'underline\', or \'none\'. Default is \'none\'. ';
+        $html_additionaloptions[] = '</td>';
+        $html_additionaloptions[] = '</tr>';
+        $html_additionaloptions[] = '</table>';
+
+        // Create HTML for alternate simpleviewer options
+        $html_alternateoptions = array();
+        $html_alternateoptions[] = '<h3>Alternate SimpleViewer Options</h3>';
+        $html_alternateoptions[] = '<p>The following is an alternate option for using SimpleViewer within this plugin.  If you provide a path to a standard SimpleViewer XML configuration file then this plugin will display the gallery and all settings specified in that file.  This option overrides all other Simpleviewer options set for this plugin.</p>';
+        $html_alternateoptions[] = '<table class="form-table">';
+        $html_alternateoptions[] = '<tr valign="top">';
+        $html_alternateoptions[] = '<th scope="row">XML Configuration File Path (xmldatapath)</th>';
+        $html_alternateoptions[] = '<td><input name="simpleflickr_xmldatapath" id="simpleflickr_xmldatapath" style="width: 95%" type="text" value="'. $simpleflickr_xmldatapath .'" size="45" />';
+        $html_alternateoptions[] = '<br />';
+        $html_alternateoptions[] = 'Relative or absolute URL of the gallery XML file. Relative paths are relative to the HTML page that contains the swf.  Default is blank. ';
+        $html_alternateoptions[] = '</td>';
+        $html_alternateoptions[] = '</tr>';
+        $html_alternateoptions[] = '</table>';
+        
+        $html_submitbutton = '<p class="submit"><input type="submit" name="info_update" value="Update Options &raquo;" /></p>';
+        
 		// Check if we passed authentication
 		if ($flickrAuth) {
-			// Get the field values
-			if(isset($_POST['info_update'])) {
-				$simpleFlickr_showrecent = trim($_POST['simpleFlickr_showrecent']);
-				$simpleFlickr_count = trim($_POST['simpleFlickr_count']);
-				$simpleFlickr_navposition = trim($_POST['simpleFlickr_navposition']);
-				$simpleFlickr_maximagewidth = trim($_POST['simpleFlickr_maximagewidth']);
-				$simpleFlickr_maximageheight = trim($_POST['simpleFlickr_maximageheight']);
-				$simpleFlickr_textcolor = trim($_POST['simpleFlickr_textcolor']);
-				$simpleFlickr_framecolor = trim($_POST['simpleFlickr_framecolor']);
-				$simpleFlickr_framewidth = trim($_POST['simpleFlickr_framewidth']);
-				$simpleFlickr_stagepadding = trim($_POST['simpleFlickr_stagepadding']);
-				$simpleFlickr_thumbnailcolumns = trim($_POST['simpleFlickr_thumbnailcolumns']);
-				$simpleFlickr_thumbnailrows = trim($_POST['simpleFlickr_thumbnailrows']);
-				$simpleFlickr_enablerightclickopen = trim($_POST['simpleFlickr_enablerightclickopen']);
-				$simpleFlickr_showimagecaption = trim($_POST['simpleFlickr_showimagecaption']);
-				$simpleFlickr_showimagelink = trim($_POST['simpleFlickr_showimagelink']);
-				$simpleFlickr_imagesize = trim($_POST['simpleFlickr_imagesize']);
-				$simpleFlickr_imagelinktext = str_replace(",", "", trim($_POST['simpleFlickr_imagelinktext']));
-				$simpleFlickr_privacyfilter = trim($_POST['simpleFlickr_privacyfilter']);
-				$simpleFlickr_title = trim($_POST['simpleFlickr_title']);
-				$simpleFlickr_width = trim($_POST['simpleFlickr_width']);
-				$simpleFlickr_height = trim($_POST['simpleFlickr_height']);
-				$simpleFlickr_quality = trim($_POST['simpleFlickr_quality']);
-				$simpleFlickr_bgcolor = trim($_POST['simpleFlickr_bgcolor']);
-				$simpleFlickr_bgtransparent = trim($_POST['simpleFlickr_bgtransparent']);
-				// Get array from DB
-				$simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
-
-				// Check if empty and fill
-				if(empty($simpleFlickr_showrecent)) 
-					$simpleFlickr_showrecent = $simpleFlickrOptionsDB['SHOW_RECENT'];
-				if(empty($simpleFlickr_count) && $simpleFlickr_count != '0') 
-					$simpleFlickr_count = $simpleFlickrOptionsDB['COUNT'];
-				if(empty($simpleFlickr_navposition)) 
-					$simpleFlickr_navposition = $simpleFlickrOptionsDB['NAV_POSITION'];
-				if(empty($simpleFlickr_maximagewidth)) 
-					$simpleFlickr_maximagewidth = $simpleFlickrOptionsDB['MAX_IMAGE_WIDTH'];
-				if(empty($simpleFlickr_maximageheight)) 
-					$simpleFlickr_maximageheight = $simpleFlickrOptionsDB['MAX_IMAGE_HEIGHT'];
-				if(empty($simpleFlickr_textcolor)) 
-					$simpleFlickr_textcolor = $simpleFlickrOptionsDB['TEXT_COLOR'];
-				if(empty($simpleFlickr_framecolor)) 
-					$simpleFlickr_framecolor = $simpleFlickrOptionsDB['FRAME_COLOR'];
-				if(empty($simpleFlickr_framewidth) && $simpleFlickr_framewidth != '0') 
-					$simpleFlickr_framewidth = $simpleFlickrOptionsDB['FRAME_WIDTH'];
-				if(empty($simpleFlickr_stagepadding) && $simpleFlickr_stagepadding != '0') 
-					$simpleFlickr_stagepadding = $simpleFlickrOptionsDB['STAGE_PADDING'];
-				if(empty($simpleFlickr_thumbnailcolumns) && $simpleFlickr_thumbnailcolumns != '0') 
-					$simpleFlickr_thumbnailcolumns = $simpleFlickrOptionsDB['THUMBNAIL_COLUMNS'];
-				if(empty($simpleFlickr_thumbnailrows) && $simpleFlickr_thumbnailrows != '0') 
-					$simpleFlickr_thumbnailrows = $simpleFlickrOptionsDB['THUMBNAIL_ROWS'];
-				if(empty($simpleFlickr_enablerightclickopen)) 
-					$simpleFlickr_enablerightclickopen = $simpleFlickrOptionsDB['ENABLE_RIGHT_CLICK_OPEN'];
-				if(empty($simpleFlickr_showimagecaption)) 
-					$simpleFlickr_showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
-				if(empty($simpleFlickr_showimagelink)) 
-					$simpleFlickr_showimagelink = $simpleFlickrOptionsDB['SHOW_IMAGE_LINK'];
-				if(empty($simpleFlickr_imagesize)) 
-					$simpleFlickr_imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
-				if(empty($simpleFlickr_imagesize)) 
-					$simpleFlickr_imagelinktext = $simpleFlickrOptionsDB['IMAGE_LINK_TEXT'];
-				if(empty($simpleFlickr_privacyfilter)) 
-					$simpleFlickr_privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
-				if(empty($simpleFlickr_width)) 
-					$simpleFlickr_width = $simpleFlickrOptionsDB['WIDTH'];
-				if(empty($simpleFlickr_height)) 
-					$simpleFlickr_height = $simpleFlickrOptionsDB['HEIGHT'];
-				if(empty($simpleFlickr_quality)) 
-					$simpleFlickr_quality = $simpleFlickrOptionsDB['QUALITY'];
-				if(empty($simpleFlickr_bgcolor)) 
-					$simpleFlickr_bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
-				if(empty($simpleFlickr_bgtransparent)) 
-					$simpleFlickr_bgtransparent = $simpleFlickrOptionsDB['BGTRANSPARENT'];
-					
-				// Add values to a new array to save
-				$simpleFlickrOptionsNewArr = array();
-				$simpleFlickrOptionsNewArr['SHOW_RECENT'] = $simpleFlickr_showrecent;
-				$simpleFlickrOptionsNewArr['COUNT'] = $simpleFlickr_count;
-				$simpleFlickrOptionsNewArr['NAV_POSITION'] = $simpleFlickr_navposition;
-				$simpleFlickrOptionsNewArr['MAX_IMAGE_WIDTH'] = $simpleFlickr_maximagewidth;
-				$simpleFlickrOptionsNewArr['MAX_IMAGE_HEIGHT'] = $simpleFlickr_maximageheight;
-				$simpleFlickrOptionsNewArr['TEXT_COLOR'] = $simpleFlickr_textcolor;
-				$simpleFlickrOptionsNewArr['FRAME_COLOR'] = $simpleFlickr_framecolor;
-				$simpleFlickrOptionsNewArr['FRAME_WIDTH'] = $simpleFlickr_framewidth;
-				$simpleFlickrOptionsNewArr['STAGE_PADDING'] = $simpleFlickr_stagepadding;
-				$simpleFlickrOptionsNewArr['THUMBNAIL_COLUMNS'] = $simpleFlickr_thumbnailcolumns;
-				$simpleFlickrOptionsNewArr['THUMBNAIL_ROWS'] = $simpleFlickr_thumbnailrows;
-				$simpleFlickrOptionsNewArr['ENABLE_RIGHT_CLICK_OPEN'] = $simpleFlickr_enablerightclickopen;
-				$simpleFlickrOptionsNewArr['SHOW_IMAGE_CAPTION'] = $simpleFlickr_showimagecaption;
-				$simpleFlickrOptionsNewArr['SHOW_IMAGE_LINK'] = $simpleFlickr_showimagelink;
-				$simpleFlickrOptionsNewArr['IMAGE_SIZE'] = $simpleFlickr_imagesize;
-				$simpleFlickrOptionsNewArr['IMAGE_LINK_TEXT'] = $simpleFlickr_imagelinktext;
-				$simpleFlickrOptionsNewArr['PRIVACY_FILTER'] = $simpleFlickr_privacyfilter;
-				$simpleFlickrOptionsNewArr['TITLE'] = $simpleFlickr_title;
-				$simpleFlickrOptionsNewArr['WIDTH'] = $simpleFlickr_width;
-				$simpleFlickrOptionsNewArr['HEIGHT'] = $simpleFlickr_height;
-				$simpleFlickrOptionsNewArr['QUALITY'] = $simpleFlickr_quality;
-				$simpleFlickrOptionsNewArr['BGCOLOR'] = $simpleFlickr_bgcolor;
-				$simpleFlickrOptionsNewArr['BGTRANSPARENT'] = $simpleFlickr_bgtransparent;
-				
-				// Save new array to DB
-				update_option(SIMPLEFLICKR_OPTIONS_NAME, $simpleFlickrOptionsNewArr);
-				
-				// Display success if updated
-				echo('<div class="updated"><p><strong>Successfully Saved Settings</strong></p></div>');
-			}
-
-			// Get values from DB
-			$simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
-			$simpleFlickr_showrecent = $simpleFlickrOptionsDB['SHOW_RECENT'];
-			$simpleFlickr_count = $simpleFlickrOptionsDB['COUNT'];
-			$simpleFlickr_navposition = $simpleFlickrOptionsDB['NAV_POSITION'];
-			$simpleFlickr_maximagewidth = $simpleFlickrOptionsDB['MAX_IMAGE_WIDTH'];
-			$simpleFlickr_maximageheight = $simpleFlickrOptionsDB['MAX_IMAGE_HEIGHT'];
-			$simpleFlickr_textcolor = $simpleFlickrOptionsDB['TEXT_COLOR'];
-			$simpleFlickr_framecolor = $simpleFlickrOptionsDB['FRAME_COLOR'];
-			$simpleFlickr_framewidth = $simpleFlickrOptionsDB['FRAME_WIDTH'];
-			$simpleFlickr_stagepadding = $simpleFlickrOptionsDB['STAGE_PADDING'];
-			$simpleFlickr_thumbnailcolumns = $simpleFlickrOptionsDB['THUMBNAIL_COLUMNS'];
-			$simpleFlickr_thumbnailrows = $simpleFlickrOptionsDB['THUMBNAIL_ROWS'];
-			$simpleFlickr_enablerightclickopen = $simpleFlickrOptionsDB['ENABLE_RIGHT_CLICK_OPEN'];
-			$simpleFlickr_showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
-			$simpleFlickr_showimagelink = $simpleFlickrOptionsDB['SHOW_IMAGE_LINK'];
-			$simpleFlickr_imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
-			$simpleFlickr_imagelinktext = $simpleFlickrOptionsDB['IMAGE_LINK_TEXT'];
-			$simpleFlickr_privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
-			$simpleFlickr_title = $simpleFlickrOptionsDB['TITLE'];
-			$simpleFlickr_width = $simpleFlickrOptionsDB['WIDTH'];
-			$simpleFlickr_height = $simpleFlickrOptionsDB['HEIGHT'];
-			$simpleFlickr_quality = $simpleFlickrOptionsDB['QUALITY'];
-			$simpleFlickr_bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
-			$simpleFlickr_bgtransparent = $simpleFlickrOptionsDB['BGTRANSPARENT'];
-			
-		
-			// Fill with defaults if no DB value was given
-			if(empty($simpleFlickr_showrecent)) 
-				$simpleFlickr_showrecent = SIMPLEFLICKR_DEFAULT_SHOWRECENT;
-			if(empty($simpleFlickr_count) && $simpleFlickr_count != '0') 
-				$simpleFlickr_count = SIMPLEFLICKR_DEFAULT_COUNT;
-			if(empty($simpleFlickr_navposition)) 
-				$simpleFlickr_navposition = SIMPLEFLICKR_DEFAULT_NAVPOSITION;
-			if(empty($simpleFlickr_maximagewidth)) 
-				$simpleFlickr_maximagewidth = SIMPLEFLICKR_DEFAULT_MAXIMAGEWIDTH;
-			if(empty($simpleFlickr_maximageheight)) 
-				$simpleFlickr_maximageheight = SIMPLEFLICKR_DEFAULT_MAXIMAGEHEIGHT;
-			if(empty($simpleFlickr_textcolor)) 
-				$simpleFlickr_textcolor = SIMPLEFLICKR_DEFAULT_TEXTCOLOR;
-			if(empty($simpleFlickr_framecolor)) 
-				$simpleFlickr_framecolor = SIMPLEFLICKR_DEFAULT_FRAMECOLOR;
-			if(empty($simpleFlickr_framewidth)&& $simpleFlickr_framewidth != '0') 
-				$simpleFlickr_framewidth = SIMPLEFLICKR_DEFAULT_FRAMEWIDTH;
-			if(empty($simpleFlickr_stagepadding)&& $simpleFlickr_stagepadding != '0') 
-				$simpleFlickr_stagepadding = SIMPLEFLICKR_DEFAULT_STAGEPADDING;
-			if(empty($simpleFlickr_thumbnailcolumns) && $simpleFlickr_thumbnailcolumns != '0') 
-				$simpleFlickr_thumbnailcolumns = SIMPLEFLICKR_DEFAULT_THUMBNAILCOLUMNS;
-			if(empty($simpleFlickr_thumbnailrows) && $simpleFlickr_thumbnailrows != '0') 
-				$simpleFlickr_thumbnailrows = SIMPLEFLICKR_DEFAULT_THUMBNAILROWS;
-			if(empty($simpleFlickr_enablerightclickopen)) 
-				$simpleFlickr_enablerightclickopen = SIMPLEFLICKR_DEFAULT_ENABLERIGHTCLICKOPEN;
-			if(empty($simpleFlickr_showimagecaption)) 
-				$simpleFlickr_showimagecaption = SIMPLEFLICKR_DEFAULT_SHOWIMAGECAPTION;
-			if(empty($simpleFlickr_showimagelink)) 
-				$simpleFlickr_showimagelink = SIMPLEFLICKR_DEFAULT_SHOWIMAGELINK;
-			if(empty($simpleFlickr_imagesize)) 
-				$simpleFlickr_imagesize = SIMPLEFLICKR_DEFAULT_IMAGESIZE;
-			if(empty($simpleFlickr_imagelinktext)) 
-				$simpleFlickr_imagelinktext = SIMPLEFLICKR_DEFAULT_IMAGELINKTEXT;
-			if(empty($simpleFlickr_privacyfilter)) 
-				$simpleFlickr_privacyfilter = SIMPLEFLICKR_DEFAULT_PRIVACYFILTER;
-			if(empty($simpleFlickr_width)) 
-				$simpleFlickr_width = SIMPLEFLICKR_DEFAULT_WIDTH;
-			if(empty($simpleFlickr_height)) 
-				$simpleFlickr_height = SIMPLEFLICKR_DEFAULT_HEIGHT;
-			if(empty($simpleFlickr_quality)) 
-				$simpleFlickr_quality = SIMPLEFLICKR_DEFAULT_QUALITY;
-			if(empty($simpleFlickr_bgcolor)) 
-				$simpleFlickr_bgcolor = SIMPLEFLICKR_DEFAULT_BGCOLOR;
-			if(empty($simpleFlickr_bgtransparent)) 
-				$simpleFlickr_bgtransparent = SIMPLEFLICKR_DEFAULT_BGTRANSPARENT;
-				
-			// Add header html
-			echo('<div class=wrap>');
-			echo('<h2>SimpleFlickr (v' . SIMPLEFLICKR_VERSION . ') Options</h2>');
-			echo("<div>");
-
-			// Add paypal div
-			echo('<div style="float:right;width:160px;background:#ddd;border:1px solid #999;padding:10px;font-size:0.9em;margin-left:10px;">');
-			echo('<h3>Enjoy this Plugin?</h3>');
-			echo('<p>If you like this plugin, and wish to contribute to its development, consider making a donation.</p>');
-			echo('<form action="https://www.paypal.com/cgi-bin/webscr" method="post">');
-echo('<input type="hidden" name="cmd" value="_s-xclick">');
-echo('<input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" border="0" name="submit" alt="Make payments with PayPal - it is fast, free and secure!">');
-echo('<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">');
-echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
-">
-</form></div>');
-			
-			//echo("<form name=\"paypal\" id=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">");
-			//echo("<h3>Enjoy this Plugin?</h3>");
-			//echo("<p>If you like this plugin, and wish to contribute to its development, consider making a donation.</p>");
-			//echo("<form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">");
-			//echo("<input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\">");
-			//echo("<input type=\"image\" src=\"https://www.paypal.com/en_US/i/btn/x-click-but04.gif\" border=\"0\" name=\"submit\" alt=\"Make payments with PayPal - it's fast, free and secure.\">");
-			//echo("<img alt=\"\" border=\"0\" src=\"https://www.paypal.com/en_US/i/scr/pixel.gif\" width=\"1\" height=\"1\">");
-			//echo("<input type=\"hidden\" name=\"encrypted\" value=\"-----BEGIN PKCS7-----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-----END PKCS7-----\"></form></div>");
-			
-			// Add description
-			echo("<div style=\"float:left;margin-bottom=20\">");
-							echo("<p>This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.<br />Please visit <a href=\"http://www.joshgerdes.com/blog/projects/simpleflickr-plugin/\" target=\"_blank\">the official website</a> for the latest information on this plugin.</p>");
-			echo("<br />");
-			echo("<br />");
-
-			echo('<form method="post">');
-			
-			// Add flickr authorization status
-			echo('<ul style="list-style:none;">');
-			echo('<li><label><strong>Current Authorized User:</strong></label>&nbsp;&nbsp;<a href="' . $photos_url . '" target="_blank">' . $username . '</a>&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="Reset" value="Reset Flickr Authorization" /></li>');
-			echo('</ul>');
-			echo("</div>");
-			
-			echo("</div>");
-			echo("<br clear=\"all\" />");
-			
-			// Add parameter options
-			echo("<fieldset class=\"options\">");
-			echo("<legend>Default Tag Settings</legend>");
-			echo("<hr />");
-			echo("<ul style=\"list-style:none;\">");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_count\"><strong>Photo Count:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_count\" id=\"simpleFlickr_count\" size=\"4\" value=\"" . $simpleFlickr_count . "\" /><br />");
-			echo("<em>The number of images to be displayed.  The maximum number the flickr API allows is 500. (For unlimited set to 0.)  Default is '0'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_showrecent\"><strong>Show Recent Photos:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_showrecent\" id=\"simpleFlickr_showrecent\">");
-			echo("<option value=\"true\"");
-			if($simpleFlickr_showrecent=='true')	echo(" selected");
-			echo(">True</option>");
-			echo("<option value=\"false\"");
-			if($simpleFlickr_showrecent=='false')	echo(" selected");
-			echo(">False</option>");
-			echo("</select><br />");
-			echo("<em>Determines the user's recent photos are displayed by default.  This option takes precedences over the 'set' and 'group' options.  So, if this is set to true then your recent photos will be displayed even if you have added the 'set' or 'group' attribute to the tag.  Default is 'false'. </em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_showimagecaption\"><strong>Show Image Caption:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_showimagecaption\" id=\"simpleFlickr_showimagecaption\">");
-			echo("<option value=\"true\"");
-			if($simpleFlickr_showimagecaption=='true')	echo(" selected");
-			echo(">True</option>");
-			echo("<option value=\"false\"");
-			if($simpleFlickr_showimagecaption=='false')	echo(" selected");
-			echo(">False</option>");
-			echo("</select><br />");
-			echo("<em>You must provide whether to display the image caption.  Can be \"true\" or \"false\". Default is 'true'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_showimagelink\"><strong>Show Image Link:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_showimagelink\" id=\"simpleFlickr_showimagelink\">");
-			echo("<option value=\"true\"");
-			if($simpleFlickr_showimagelink=='true')	echo(" selected");
-			echo(">True</option>");
-			echo("<option value=\"false\"");
-			if($simpleFlickr_showimagelink=='false')	echo(" selected");
-			echo(">False</option>");
-			echo("</select><br />");
-			echo("<em>You must provide whether to display the image link.  The image link is part of the caption so showimagecaption must be 'true' for the image link to be displayed.  Can be \"true\" or \"false\". Default is 'true'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_imagelinktext\"><strong>Image Link Text:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_imagelinktext\" id=\"simpleFlickr_imagelinktext\" size=\"30\" value=\"" . $simpleFlickr_imagelinktext . "\" /><br />");
-			echo("<em>This is the text to display as a image link.  Default is 'View flickr photo page...'</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_imagesize\"><strong>Image Size:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_imagesize\" id=\"simpleFlickr_imagesize\">");
-			echo("	<option value=\"Square\""); 
-			if($simpleFlickr_imagesize=='Square')	echo(" selected");
-			echo(">Square</option>");
-			echo("	<option value=\"Thumbnail\""); 
-			if($simpleFlickr_imagesize=='Thumbnail')	echo(" selected");
-			echo(">Thumbnail</option>");
-			echo("	<option value=\"Small\""); 
-			if($simpleFlickr_imagesize=='Small')	echo(" selected");
-			echo(">Small</option>");
-			echo("	<option value=\"Medium\""); 
-			if($simpleFlickr_imagesize=='Medium')	echo(" selected");
-			echo(">Medium</option>");
-			echo("	<option value=\"Large\""); 
-			if($simpleFlickr_imagesize=='Large')	echo(" selected");
-			echo(">Large</option>");
-			echo("	<option value=\"Original\""); 
-			if($simpleFlickr_imagesize=='Original')	echo(" selected");
-			echo(">Original</option>");
-			echo("</select><br />");
-			echo("<em>You must provide the size of the image displayed in the simpleviewer flash object.  Can be 'Square', 'Thumbnail', 'Small', 'Medium', 'Large', 'Original'.  Default is 'Medium'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_privacyfilter\"><strong>Privacy Filter:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_privacyfilter\" id=\"simpleFlickr_privacyfilter\">");
-			echo("	<option value=\"1\""); 
-			if($simpleFlickr_privacyfilter=='1')	echo(" selected");
-			echo(">Public photos</option>");
-			echo("	<option value=\"2\""); 
-			if($simpleFlickr_privacyfilter=='2')	echo(" selected");
-			echo(">Private photos visible to friends</option>");
-			echo("	<option value=\"3\""); 
-			if($simpleFlickr_privacyfilter=='3')	echo(" selected");
-			echo(">Private photos visible to family</option>");
-			echo("	<option value=\"4\""); 
-			if($simpleFlickr_privacyfilter=='4')	echo(" selected");
-			echo(">Private photos visible to friends & family</option>");
-			echo("	<option value=\"5\""); 
-			if($simpleFlickr_privacyfilter=='5')	echo(" selected");
-			echo(">Completely private photos</option>");			
-			echo("</select><br />");
-			echo("<em>Determines what photos are displayed based on the level of privacy selected. Values can be 'Public photos', 'Private photos visible to friends', 'Private photos visible to family', 'Private photos visible to friends & family', 'Completely private photos'.  Default is 'Public photos'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_title\"><strong>Title:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_title\" id=\"simpleFlickr_title\" size=\"30\" value=\"" . $simpleFlickr_title . "\" /><br />");
-			echo("<em>This is the text to display as a gallery title.  Default is blank.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_width\"><strong>Width:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_width\" id=\"simpleFlickr_width\" size=\"4\" value=\"" . $simpleFlickr_width . "\" /><br />");
-			echo("<em>You must provide the width of the simpleviewer flash object.  Percentages and Pixel values can be given.  Default is 100%.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_height\"><strong>Height:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_height\" id=\"simpleFlickr_height\" size=\"4\" value=\"" . $simpleFlickr_height . "\" /><br />");
-			echo(" <em>You must provide the height of the simpleviewer flash object.  Percentages and Pixel values can be given.  Default is 100%.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_quality\"><strong>Quality:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_quality\" id=\"simpleFlickr_quality\">");
-			echo("	<option value=\"best\""); 
-			if($simpleFlickr_quality=='best')	echo(" selected");
-			echo(">Best</option>");
-			echo("	<option value=\"high\""); 
-			if($simpleFlickr_quality=='high')	echo(" selected");
-			echo(">High</option>");
-			echo("	<option value=\"medium\""); 
-			if($simpleFlickr_quality=='medium')	echo(" selected");
-			echo(">Medium</option>");
-			echo("	<option value=\"autohigh\""); 
-			if($simpleFlickr_quality=='autohigh')	echo(" selected");
-			echo(">Autohigh</option>");
-			echo("	<option value=\"autolow\""); 
-			if($simpleFlickr_quality=='autolow')	echo(" selected");
-			echo(">Autolow</option>");
-			echo("	<option value=\"low\""); 
-			if($simpleFlickr_quality=='low')	echo(" selected");
-			echo(">Low</option>");
-			echo("</select><br />");
-			echo("<em>You must provide the quality of the simpleviewer flash object.  Can be 'low', 'high', 'autolow', 'autohigh', 'best'.  Default is 'best'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_bgcolor\"><strong>Background Color:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_bgcolor\" id=\"simpleFlickr_bgcolor\" size=\"8\" maxlength=\"7\" value=\"" . $simpleFlickr_bgcolor . "\" /><br />");
-			echo("<em>You must provide the background color of the simpleviewer flash object (hexidecimal color value e.g #FF00FF).  Default is #FFFFFF.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_bgtransparent\"><strong>Transparent Background:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_bgtransparent\" id=\"simpleFlickr_bgtransparent\">");
-			echo("<option value=\"true\"");
-			if($simpleFlickr_bgtransparent=='true')	echo(" selected");
-			echo(">True</option>");
-			echo("<option value=\"false\"");
-			if($simpleFlickr_bgtransparent=='false') echo(" selected");
-			echo(">False</option>");
-			echo("</select><br />");
-			echo("<em>Override the background color and make the background of SimpleViewer transparent.  Can be \"true\" or \"false\". Default is 'false'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_navposition\"><strong>Nav Position:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_navposition\" id=\"simpleFlickr_navposition\">");
-			echo("<option value=\"bottom\""); 
-			if($simpleFlickr_navposition=='bottom')	echo(" selected");
-			echo(">Bottom</option>");
-			echo("<option value=\"top\""); 
-			if($simpleFlickr_navposition=='top')	echo(" selected");
-			echo(">Top</option>");
-			echo("<option value=\"left\""); 
-			if($simpleFlickr_navposition=='left')	echo(" selected");
-			echo(">Left</option>");
-			echo("<option value=\"right\""); 
-			if($simpleFlickr_navposition=='right')	echo(" selected");
-			echo(">Right</option>");
-			echo("</select><br />");
-			echo(" <em>You must provide the position of the simpleviewer navigation menu relative to the image.  Can be 'top', 'bottom', 'left' or 'right'.  Default is 'bottom'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_thumbnailcolumns\"><strong>Thumbnail Columns:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_thumbnailcolumns\" id=\"simpleFlickr_thumbnailcolumns\" size=\"4\" value=\"" . $simpleFlickr_thumbnailcolumns . "\" /><br />");
-			echo("	 <em>You must provide the number of thumbnail columns. (To disable thumbnails completely set this value to 0.)  Default is '3'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_thumbnailrows\"><strong>Thumbnail Rows:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_thumbnailrows\" id=\"simpleFlickr_thumbnailrows\" size=\"4\" value=\"" . $simpleFlickr_thumbnailrows . "\" /><br />");
-			echo("	 <em>You must provide the number of thumbnail rows. (To disable thumbnails completely set this value to 0.)  Default is '3'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_maximagewidth\"><strong>Max Image Width:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_maximagewidth\" id=\"simpleFlickr_maximagewidth\" size=\"4\" value=\"" . $simpleFlickr_maximagewidth . "\" /><br />");
-			echo("	 <em>You must provide the width of your largest image in pixels. Used to determine the best layout for your gallery.  Default is '500'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_maximageheight\"><strong>Max Image Height:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_maximageheight\" id=\"simpleFlickr_maximageheight\" size=\"4\" value=\"" . $simpleFlickr_maximageheight . "\" /><br />");
-			echo("	 <em>You must provide height of your largest image in pixels. Used to determine the best layout for your gallery.  Default is '300'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_textcolor\"><strong>Text Color:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_textcolor\" id=\"simpleFlickr_textcolor\" size=\"10\" maxlength=\"8\" value=\"" . $simpleFlickr_textcolor . "\" /><br />");
-			echo("	 <em>You must provide the color of title and caption text (hexidecimal color value e.g 0xff00ff).  Default is '0x000000'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_framecolor\"><strong>Frame Color:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_framecolor\" id=\"simpleFlickr_framecolor\" size=\"10\" maxlength=\"8\" value=\"" . $simpleFlickr_framecolor . "\" /><br />");
-			echo("<em>You must provide the color of the image frame, navigation buttons and thumbnail frame (hexidecimal color value e.g 0xff00ff).  Default is '0xBBBBBB'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_framewidth\"><strong>Frame Width:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_framewidth\" id=\"simpleFlickr_framewidth\" size=\"4\" value=\"" . $simpleFlickr_framewidth . "\" /><br />");
-			echo("	 <em>You must provide the width of image frame in pixels.  Default is '15'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_stagepadding\"><strong>Stage Padding:</strong></label>&nbsp;&nbsp;");
-			echo("<input type=\"text\" name=\"simpleFlickr_stagepadding\" id=\"simpleFlickr_stagepadding\" size=\"4\" value=\"" . $simpleFlickr_stagepadding . "\" /><br />");
-			echo("	 <em>You must provide the distance between image and thumbnails and around gallery edge in pixels.  Default is '40'.</em> <br /><br />");
-			echo("</li>");
-			echo("<li>");
-			echo("<label for=\"simpleFlickr_enablerightclickopen\"><strong>Enable Right Click Open:</strong></label>&nbsp;&nbsp;");
-			echo("<select name=\"simpleFlickr_enablerightclickopen\" id=\"simpleFlickr_enablerightclickopen\">");
-			echo("<option value=\"true\"");
-			if($simpleFlickr_enablerightclickopen=='true')	echo(" selected");
-			echo(">True</option>");
-			echo("<option value=\"false\"");
-			if($simpleFlickr_enablerightclickopen=='false')	echo(" selected");
-			echo(">False</option>");
-			echo("</select><br />");
-			echo("<em>You must provide whether to display a 'Open In new Window...' dialog when right-clicking on an image. Can be 'true' or 'false'.  Default is 'true'. </em> <br /><br />");
-			echo("</li>");
-			echo("</ul>");
-			
-			// Add update button
-			echo('<div class="submit"><input type="submit" name="info_update" value="Update options &raquo;" /></div>');
-		}
+            
+            // Add flickr options
+            $html_output .= join(PHP_EOL, $html_flickroptions);
+            
+            // Add flash options
+            $html_output .= join(PHP_EOL, $html_flashoptions);
+            
+            // Add simpleviewer options
+            $html_output .= join(PHP_EOL, $html_simplevieweroptions);
+            
+            // Add additional options
+            $html_output .= join(PHP_EOL, $html_additionaloptions);
+            
+            // Add alternate  options
+            $html_output .= join(PHP_EOL, $html_alternateoptions);
+            
+            // Add button
+            $html_output .= $html_submitbutton . PHP_EOL;
+        }
 		else {
 		
-			// Add header html
-			echo('<div class=wrap><form method="post">');
-			echo('<h2>SimpleFlickr (v' . SIMPLEFLICKR_VERSION . ') Options</h2>');
-		
 			// Setup authentication url
-			$link = 'http://flickr.com/services/auth/?api_key=' . SIMPLEFLICKR_FLICKR_API_KEY . '&frob=' . $frob . '&perms=read';
+			$link = 'http://flickr.com/services/auth/?api_key=' . SIMPLEFLICKR_FLICKR_API_KEY . '&amp;frob=' . $frob . '&amp;perms=read';
 			$parms = 'api_key' . SIMPLEFLICKR_FLICKR_API_KEY . 'frob' . $frob . 'permsread';
-			$link .= '&api_sig=' . md5(SIMPLEFLICKR_FLICKR_API_SECRET . $parms);
+			$link .= '&amp;api_sig=' . md5(SIMPLEFLICKR_FLICKR_API_SECRET . $parms);
 			
-			// Render the html
-			echo('<fieldset class="options">');
-			echo(' <legend>Initial Setup</legend>');
-			echo('<input type="hidden" name="frob" value="' . $frob . '">');
-		    echo('<p>Please complete the following steps to allow SimpleFlickr access to your Flickr photos.</p>');
-		    echo('<p><strong>Step 1</strong>: <a href="' . $link . '" target="_blank">Authorize SimpleFlickr to access your Flickr account</a></p>');
-		    echo('<p><strong>Step 2</strong>: <input type="submit" name="Authenticate" value="Get Authentication Token" /></p>');
+            // Create HTML for flickr authorization
+            $html_flickrauth = array();
+            $html_flickrauth[] = '<h3>Flickr Authorization</h3>';
+            $html_flickrauth[] = '<p>Please complete the following steps to allow SimpleFlickr access to your Flickr photos.</p>';
+			$html_flickrauth[] = '<input type="hidden" name="frob" value="' . $frob . '" />';
+            $html_flickrauth[] = '<table class="form-table">';
+            $html_flickrauth[] = '<tr valign="top">';
+            $html_flickrauth[] = '<th scope="row">Step 1</th>';
+            $html_flickrauth[] = '<td><a href="' . $link . '" target="_blank">Authorize SimpleFlickr to access your Flickr account</a>';
+            $html_flickrauth[] = '<br />';
+            $html_flickrauth[] = 'A new browser window or tab will open asking you to login to your flickr account and authorize this application.  Click \'Ok, I\'ll Allow it\' then leave that window (or tab) open and return to this options page to complete the authorization.';
+            $html_flickrauth[] = '</td>';
+            $html_flickrauth[] = '</tr>';
+            $html_flickrauth[] = '<tr valign="top">';
+            $html_flickrauth[] = '<th scope="row">Step 2</th>';
+            $html_flickrauth[] = '<td><input type="submit" name="Authenticate" value="Get Authentication Token" />';
+            $html_flickrauth[] = '<br />';
+            $html_flickrauth[] = 'Once this button has been clicked then your flickr account should be authenticated with this plugin and you may close the previously opened window (or tab).';
+            $html_flickrauth[] = '</td>';
+            $html_flickrauth[] = '</tr>';
+            $html_flickrauth[] = '</table>';
+            
+            // Add flickr authorization
+            $html_output .= join(PHP_EOL, $html_flickrauth);
+            
+            // Add flash options
+            $html_output .= join(PHP_EOL, $html_flashoptions);
+            
+            // Add alternate  options
+            $html_output .= join(PHP_EOL, $html_alternateoptions);
+            
+            // Add button
+            $html_output .= $html_submitbutton . PHP_EOL;
 		}
 		
 		// Add footer html
-		echo('</fieldset>');
-		echo('</form></div>');
+        $html_output .= '</form>'. PHP_EOL;
+		$html_output .= '</div>'. PHP_EOL;
+        
+        // Write the HTML to screen
+        echo($html_output);
 	}
-	
+    
 	function main_filter($content) {
 		$pattern = '/(<p>[\s\n\r]*)??(([\[<]SIMPLEFLICKR.*\/[\]>])|([\[<]SIMPLEFLICKR.*[\]>][\[<]\/SIMPLEFLICKR[\]>]))([\s\n\r]*<\/p>)??/Umi'; 
 		return preg_replace_callback($pattern,array(&$this, 'parse_tags'),$content);
@@ -774,10 +876,10 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 		$atts['width']				= ($width{strlen($atts['width']) - 1} == "%") ? '"' . $atts['width'] . '"' : $atts['width'];
 			
 		// If we're not serving up a feed, generate the script tags
-		if ($request_type  != "feed") {
+		if (is_feed()) {
+            $ret = $this->build_feed($atts);
+		} else {            
 			$ret = $this->build_script($atts);
-		} else {
-			$ret = $this->build_feed($atts);
 		}
 
 		return $ret;
@@ -794,79 +896,96 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 
 		// Get the default values for some of the tags
 		$simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
-		$default_width = $simpleFlickrOptionsDB['WIDTH'];
-		$default_height = $simpleFlickrOptionsDB['HEIGHT'];
-		$default_quality = $simpleFlickrOptionsDB['QUALITY'];
-		$default_bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
-		$default_bgtransparent = $simpleFlickrOptionsDB['BGTRANSPARENT'];
-		
-		// Fill with defaults if no DB value was given
-		if(empty($default_width)) 
-			$default_width = SIMPLEFLICKR_DEFAULT_WIDTH;
-		if(empty($default_height)) 
-			$default_height = SIMPLEFLICKR_DEFAULT_HEIGHT;
-		if(empty($default_quality)) 
-			$default_quality = SIMPLEFLICKR_DEFAULT_QUALITY;
-		if(empty($default_bgcolor)) 
-			$default_bgcolor = SIMPLEFLICKR_DEFAULT_BGCOLOR;
-		if(empty($default_bgtransparent)) 
-			$default_bgtransparent = SIMPLEFLICKR_DEFAULT_BGTRANSPARENT;
-			
+        $xmldatapath = $simpleFlickrOptionsDB['XML_DATA_PATH'];
+        $width = $simpleFlickrOptionsDB['WIDTH'];
+        $height = $simpleFlickrOptionsDB['HEIGHT'];
+        $quality = $simpleFlickrOptionsDB['QUALITY'];
+        $bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
+        $wmode = $simpleFlickrOptionsDB['WMODE'];
+        
 		// Load some defaults if value not given
-		if(empty($width))	$width = $default_width; 
-		if(empty($height))	$height = $default_height;
-		if(empty($quality))	$quality = $default_quality;
-		if(empty($bgcolor))	$bgcolor = $default_bgcolor;
-		if(empty($bgtransparent))	$bgtransparent = $default_bgtransparent;
+		if(empty($width))	    $width = SIMPLEFLICKR_DEFAULT_WIDTH; 
+		if(empty($height))	    $height = SIMPLEFLICKR_DEFAULT_HEIGHT;
+		if(empty($quality))	    $quality = SIMPLEFLICKR_DEFAULT_QUALITY;
+		if(empty($bgcolor))	    $bgcolor = SIMPLEFLICKR_DEFAULT_BGCOLOR;
+		if(empty($wmode))	    $wmode = SIMPLEFLICKR_DEFAULT_WMODE;
 		
-		// Combine the simpleviewer parameters
-		$params[] = $showrecent;	
-		$params[] = $set;
-		$params[] = $group;
-		$params[] = $navposition;
-		$params[] = $maximagewidth;
-		$params[] = $maximageheight;
-		$params[] = $textcolor;
-		$params[] = $framecolor;
-		$params[] = $framewidth;
-		$params[] = $stagepadding;
-		$params[] = $thumbnailcolumns;
-		$params[] = $thumbnailrows;
-		$params[] = $enablerightclickopen;
-		$params[] = $title;
-		$params[] = $count;
-		$params[] = $showimagecaption;
-		$params[] = $showimagelink;
-		$params[] = $imagesize;
-		$params[] = $imagelinktext;
-		$params[] = $privacyfilter;
-		
-		$parameters = join(",", $params);
-		$background_setting = '", bgcolor:"' . $bgcolor;	
-		if($bgtransparent == "true"){ 
-			$background_setting = '", wmode:"transparent';
-			$params[] = array('wmode' => 'transparent');
-			$params['bgcolor'] = null;
-		}
+        if(empty($xmldatapath))
+        {
+    		// Combine the simpleviewer parameters
+            
+            // Tag only parameters
+            $params[] = $set;
+    		$params[] = $group;
+            
+            // Flickr Options
+            $params[] = $count;
+            $params[] = $showrecent;
+            $params[] = $imagesize;
+            $params[] = $privacyfilter;
+            
+            // SimpleViewer Options
+            $params[] = $maximagewidth;
+            $params[] = $maximageheight;
+            $params[] = $textcolor;
+            $params[] = $framecolor;
+            $params[] = $framewidth;
+            $params[] = $stagepadding;
+            $params[] = $navpadding;
+            $params[] = $thumbnailcolumns;
+            $params[] = $thumbnailrows;
+            $params[] = $navposition;
+            $params[] = $valign;
+            $params[] = $halign;
+            $params[] = $title;
+            $params[] = $enablerightclickopen;
+            $params[] = $backgroundimagepath;
+            
+            // Additional Options
+            $params[] = $showimagecaption;
+            $params[] = $imagecaptionlink;
+            $params[] = $imagecaptionstyle;
+    		
+    		$parameters = join(",", $params);
+
+            // Clear bgcolor if wmode is transparent
+    		if($wmode == 'transparent') 
+                $bgcolor = null;
+            
+            // Create the URL for the xmldatapath
+            $xmldatapath = $this->get_plugin_uri() .'simpleFlickr.php?parameters='. $parameters;
+        }
+        
+        // Generate the unique id
+        $prefix = 'SF_'. $rand . '_';
+        
 		// Create the script
 		$output	= array();
-		$output[] = '<div id="SF_' . $rand . '_Viewer" class="flashmovie">';
-		$output[] = '<strong>You need to upgrade or install Adobe Flash Player</strong><br />';
+		$output[] = '<div id="'. $prefix .'Viewer" class="flashmovie">';
 		$output[] = '<a href="http://www.macromedia.com/go/getflashplayer"><img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get macromedia Flash Player" style="border:none;" /></a>';
 		$output[] = '</div>';
-		$output[] = '';
 		$output[] = '<script type="text/javascript">';
-		$output[] = '';
-		$output[] = '// <![CDATA[';
-		$output[] = '';
-		$output[] = 'var SF_' . $rand . ' = { movie:"' . $this->get_plugin_uri() . 'viewer.swf", width:"' . $width . '", height:"' . $height . $background_setting . '", quality:"' . $quality . '", majorversion:"9", build:"0", xi:"true", base:"' . $this->get_plugin_uri() . '", flashvars:"xmlDataPath=' . $this->get_plugin_uri() . 'simpleFlickr.php?parameters=' . $parameters . '", ximovie:"' . $this->get_plugin_uri()  . 'ufo/ufo.swf" };';
-		$output[] = 'UFO.create(SF_' . $rand . ', "SF_' . $rand . '_Viewer");';
-		$output[] = '';
-		$output[] = '// ]]>';
-		$output[] = '';
+        $output[] = 'var '. $prefix .'flashvars = {};';
+        $output[] = $prefix .'flashvars.xmlDataPath = "'. $xmldatapath .'";';
+        if(!empty($firstimageindex))
+            $output[] = $prefix .'flashvars.firstImageIndex = "'. $firstimageindex .'";';
+        if(!empty($langopenimage))
+            $output[] = $prefix .'flashvars.langOpenImage = "'. $langopenimage .'";';
+        if(!empty($langabout))
+            $output[] = $prefix .'flashvars.langAbout = "'. $langabout .'";';
+        if(!empty($preloadercolor))
+            $output[] = $prefix .'flashvars.preloaderColor = "'. $preloadercolor .'";';
+        $output[] = 'var '. $prefix .'params = {};';
+        $output[] = $prefix .'params.quality = "'. $quality .'";';
+        $output[] = $prefix .'params.wmode = "'. $wmode .'";';
+        if(!empty($bgcolor))    
+            $output[] = $prefix .'params.bgcolor = "'. $bgcolor .'";';
+        $output[] = $prefix .'params.base = "'. $this->get_plugin_uri() .'";';
+        $output[] = 'var '. $prefix .'attributes = {};';
+        $output[] = 'swfobject.embedSWF("'. $this->get_plugin_uri() .'viewer.swf", "SF_'. $rand .'_Viewer", "'. $width .'", "'. $height .'", "8.0.0", "'. $this->get_plugin_uri() .'swfobject/expressInstall.swf", '. $prefix .'flashvars, '. $prefix .'params, '. $prefix .'attributes);';
 		$output[] = '</script>';
 		$output[] = '';
-		$result = join("\n", $output);
+		$result = join(PHP_EOL, $output);
 	
 		return $result;
 	}
@@ -874,84 +993,91 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 	function build_feed($atts) {
 		$result = "";
 		
-		// Extract out all of the option variables
-		if (is_array($atts)) extract($atts);
+		// Create the message to be displayed.  Had lots of issues displaying the flash content in the RSS feed so decided to just show a message.
+		$output = array();
+        $output[] = '<p>';
+        $output[] = '<strong>-- SimpleFlickr Content --</strong><br />';
+        $output[] = '(Please visit the original post page to view the details.)';
+        $output[] = '</p>';
 
-		// Get the default values for some of the tags
-		$simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
-		$default_width = $simpleFlickrOptionsDB['WIDTH'];
-		$default_height = $simpleFlickrOptionsDB['HEIGHT'];
-
-		// Fill with defaults if no DB value was given
-		if(empty($default_width)) 
-			$default_width = SIMPLEFLICKR_DEFAULT_WIDTH;
-		if(empty($default_height)) 
-			$default_height = SIMPLEFLICKR_DEFAULT_HEIGHT;
-
-		// Load some defualts if value not given
-		if(empty($width))	$width = $default_width; 
-		if(empty($height))	$height = $default_height;
-		
-		$output[] = '';    
-		$output[] = '<object	type="application/x-shockwave-flash"';
-		$output[] = '			data="' . $this->get_plugin_uri() . 'viewer.swf"'; 
-		$output[] = '			base="' . $this->get_plugin_uri() . '"';
-		$output[] = '			width="' . $width . '"';
-		$output[] = '			height="' . $height . '">';
-		$output[] = '	<param name="movie" value="' . $this->get_plugin_uri() . 'viewer.swf" />';
-		$output[] = '	<param name=base" value="' . $this->get_plugin_uri() . '" />';
-		$output[] = '</object>';     
-
-		$result .= join("\n", $output);	
+		$result = join(PHP_EOL, $output);	
 	
 		return $result;
 	}
 	
 	function get_xml($parameters) {
 		// Get the saved default tag values
-		$simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
-		$showrecent = $simpleFlickrOptionsDB['SHOW_RECENT'];
-		$navposition = $simpleFlickrOptionsDB['NAV_POSITION'];
-		$maximagewidth = $simpleFlickrOptionsDB['MAX_IMAGE_WIDTH'];
-		$maximageheight = $simpleFlickrOptionsDB['MAX_IMAGE_HEIGHT'];
-		$textcolor = $simpleFlickrOptionsDB['TEXT_COLOR'];
-		$framecolor = $simpleFlickrOptionsDB['FRAME_COLOR'];
-		$framewidth = $simpleFlickrOptionsDB['FRAME_WIDTH'];
-		$stagepadding = $simpleFlickrOptionsDB['STAGE_PADDING'];
-		$thumbnailcolumns = $simpleFlickrOptionsDB['THUMBNAIL_COLUMNS'];
-		$thumbnailrows = $simpleFlickrOptionsDB['THUMBNAIL_ROWS'];
-		$enablerightclickopen = $simpleFlickrOptionsDB['ENABLE_RIGHT_CLICK_OPEN'];
-		$title = $simpleFlickrOptionsDB['TITLE'];
-		$count = $simpleFlickrOptionsDB['COUNT'];
-		$showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
-		$showimagelink = $simpleFlickrOptionsDB['SHOW_IMAGE_LINK'];
-		$imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
-		$imagelinktext = $simpleFlickrOptionsDB['IMAGE_LINK_TEXT'];
-		$privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
+        
+        // Get values from DB
+        $simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
+        
+        // Flickr Options
+        $count = $simpleFlickrOptionsDB['COUNT'];
+        $showrecent = $simpleFlickrOptionsDB['SHOW_RECENT'];
+        $imagesize = $simpleFlickrOptionsDB['IMAGE_SIZE'];
+        $privacyfilter = $simpleFlickrOptionsDB['PRIVACY_FILTER'];
+        
+        // SimpleViewer Options
+        $maximagewidth = $simpleFlickrOptionsDB['MAX_IMAGE_WIDTH'];
+        $maximageheight = $simpleFlickrOptionsDB['MAX_IMAGE_HEIGHT'];
+        $textcolor = $simpleFlickrOptionsDB['TEXT_COLOR'];
+        $framecolor = $simpleFlickrOptionsDB['FRAME_COLOR'];
+        $framewidth = $simpleFlickrOptionsDB['FRAME_WIDTH'];
+        $stagepadding = $simpleFlickrOptionsDB['STAGE_PADDING'];
+        $navpadding = $simpleFlickrOptionsDB['NAV_PADDING'];
+        $thumbnailcolumns = $simpleFlickrOptionsDB['THUMBNAIL_COLUMNS'];
+        $thumbnailrows = $simpleFlickrOptionsDB['THUMBNAIL_ROWS'];
+        $navposition = $simpleFlickrOptionsDB['NAV_POSITION'];
+        $valign = $simpleFlickrOptionsDB['VALIGN'];
+        $halign = $simpleFlickrOptionsDB['HALIGN'];
+        $title = $simpleFlickrOptionsDB['TITLE'];
+        $enablerightclickopen = $simpleFlickrOptionsDB['ENABLE_RIGHT_CLICK_OPEN'];
+        $backgroundimagepath = $simpleFlickrOptionsDB['BACKGROUND_IMAGE_PATH'];
+        
+        // Additional Options
+        $showimagecaption = $simpleFlickrOptionsDB['SHOW_IMAGE_CAPTION'];
+        $imagecaptionlink = $simpleFlickrOptionsDB['IMAGE_CAPTION_LINK'];
+        $imagecaptionstyle = $simpleFlickrOptionsDB['IMAGE_CAPTION_STYLE'];
+            
 		
 		// Get the values from the tag if given
 		$array = split(",", $_GET{parameters});
-		if(isset($array[0]) && strlen($array[0]))	$showrecent = $array[0];
-		if(isset($array[1]) && strlen($array[1]))	$setid = $array[1];
-		if(isset($array[2]) && strlen($array[2]))	$group = $array[2];
-		if(isset($array[3]) && strlen($array[3]))	$navposition = $array[3];
-		if(isset($array[4]) && strlen($array[4]))	$maximagewidth = $array[4];
-		if(isset($array[5]) && strlen($array[5]))	$maximageheight = $array[5];
-		if(isset($array[6]) && strlen($array[6]))	$textcolor = $array[6];
-		if(isset($array[7]) && strlen($array[7]))	$framecolor = $array[7];
-		if(isset($array[8]) && strlen($array[8]))	$framewidth = $array[8];
-		if(isset($array[9]) && strlen($array[9]))	$stagepadding = $array[9];
-		if(isset($array[10]) && strlen($array[10]))	$thumbnailcolumns = $array[10];
-		if(isset($array[11]) && strlen($array[11]))	$thumbnailrows = $array[11];
-		if(isset($array[12]) && strlen($array[12]))	$enablerightclickopen = $array[12];
-		if(isset($array[13]) && strlen($array[13]))	$title = $array[13];
-		if(isset($array[14]) && strlen($array[14]))	$count = $array[14];
-		if(isset($array[15]) && strlen($array[15]))	$showimagecaption = $array[15];
-		if(isset($array[16]) && strlen($array[16]))	$showimagelink = $array[16];
-		if(isset($array[17]) && strlen($array[17]))	$imagesize = $array[17];
-		if(isset($array[18]) && strlen($array[18]))	$imagelinktext = $array[18];
-		if(isset($array[19]) && strlen($array[19]))	$privacyfilter = $array[19];
+        
+        // Tag only parameters
+        if(isset($array[0]) && strlen($array[0]))	$setid = $array[0];
+        if(isset($array[1]) && strlen($array[1]))	$group = $array[1];
+        
+        // Flickr Options
+        if(isset($array[2]) && strlen($array[2]))	$count = $array[2];
+        if(isset($array[3]) && strlen($array[3]))	$showrecent = $array[3];
+        if(isset($array[4]) && strlen($array[4]))	$imagesize = $array[4];
+        if(isset($array[5]) && strlen($array[5]))	$privacyfilter = $array[5];
+        
+        // SimpleViewer Options
+        if(isset($array[6]) && strlen($array[6]))	$maximagewidth = $array[6];
+        if(isset($array[7]) && strlen($array[7]))	$maximageheight = $array[7];
+        if(isset($array[8]) && strlen($array[8]))	$textcolor = $array[8];
+        if(isset($array[9]) && strlen($array[9]))	$framecolor = $array[9];
+        if(isset($array[10]) && strlen($array[10]))	$framewidth = $array[10];
+        if(isset($array[11]) && strlen($array[11]))	$stagepadding = $array[11];
+        if(isset($array[12]) && strlen($array[12]))	$navpadding = $array[12];
+        if(isset($array[13]) && strlen($array[13]))	$thumbnailcolumns = $array[13];
+        if(isset($array[14]) && strlen($array[14]))	$thumbnailrows = $array[14];
+        if(isset($array[15]) && strlen($array[15]))	$navposition = $array[15];
+        if(isset($array[16]) && strlen($array[16]))	$valign = $array[16];
+        if(isset($array[17]) && strlen($array[17]))	$halign = $array[17];
+        if(isset($array[18]) && strlen($array[18]))	$title = $array[18];
+        if(isset($array[19]) && strlen($array[19]))	$enablerightclickopen = $array[19];
+        if(isset($array[20]) && strlen($array[20]))	$backgroundimagepath = $array[20];
+        
+        // Additional Options
+        if(isset($array[21]) && strlen($array[21]))	$showimagecaption = $array[21];
+        if(isset($array[22]) && strlen($array[22]))	$imagecaptionlink = $array[22];
+        if(isset($array[23]) && strlen($array[23]))	$imagecaptionstyle = $array[23];
 
+        // Set count if not set
+        if(empty($count))   $count = 0;
+        
 		// Check if set or group given or if recent set to true
 		if( !isset($setid) && !isset($group) && $showrecent != 'true' ) {
 			echo('Error: Set or Group parameter must be supplied or Recent must be set to true.');
@@ -1040,25 +1166,41 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 		$thumbtype = (strtolower($imagesize) == "original") ? "SquareOriginal" : "Square";
 		
 		// Generate xml output
-		$xmlout = '<?xm' . 'l version="1.0" encoding="UTF-8"?>';
+		$xmlout = '<?xml version="1.0" encoding="UTF-8"?>';
 		$xmlout .= '<!-- Last updated: ' . date("r") . ' -->';
-		$xmlout .= '<SIMPLEVIEWER_DATA 
-			maxImageHeight="' . $maximageheight . '"
-			maxImageWidth="' . $maximagewidth . '"
-			textColor="' . $textcolor . '" 
-			frameColor="' . $framecolor . '" 
-			bgColor="0x000000"
-			frameWidth="' . $framewidth . '"
-			stagePadding="' . $stagepadding . '"
-			thumbnailColumns="' . $thumbnailcolumns . '"
-			thumbnailRows="' . $thumbnailrows . '"
-			navPosition="' . $navposition . '"
-			navDirection="LTR"
-			enableRightClickOpen="' . $enablerightclickopen . '"
-			title="' . $title . '"
-			imagePath="simpleFlickr.php?mode=img&amp;size=' . $imagesize . '&amp;image="
-			thumbPath="simpleFlickr.php?mode=img&amp;size=' . $thumbtype . '&amp;image=">
-		';
+		$xmlout .= '<simpleviewergallery ';
+        if(!empty($maximagewidth))
+            $xmlout .= ' maxImageWidth="'. $maximagewidth .'"';
+        if(!empty($maximageheight))
+            $xmlout .= ' maxImageHeight="'. $maximageheight .'"';
+        if(!empty($textcolor))
+            $xmlout .= ' textColor="'. $textcolor .'"';
+        if(!empty($framecolor))
+            $xmlout .= ' frameColor="'. $framecolor .'"';
+        if(!empty($framewidth))
+            $xmlout .= ' frameWidth="'. $framewidth .'"';
+        if(!empty($stagepadding))
+            $xmlout .= ' stagePadding="'. $stagepadding .'"';
+        if(!empty($navpadding))
+            $xmlout .= ' navPadding="'. $navpadding .'"';
+        if(!empty($thumbnailcolumns))
+            $xmlout .= ' thumbnailColumns="'. $thumbnailcolumns .'"';
+        if(!empty($thumbnailrows))
+            $xmlout .= ' thumbnailRows="'. $thumbnailrows .'"';
+        if(!empty($navposition))
+            $xmlout .= ' navPosition="'. $navposition .'"';
+        if(!empty($valign))
+            $xmlout .= ' vAlign="'. $valign .'"';
+        if(!empty($halign))
+            $xmlout .= ' hAlign="'. $halign .'"';
+        if(!empty($title))
+            $xmlout .= ' title="'. $title .'"';
+        if(!empty($enablerightclickopen))
+            $xmlout .= ' enableRightClickOpen="'. $enablerightclickopen .'"';
+        if(!empty($backgroundimagepath))
+            $xmlout .= ' backgroundImagePath="'. $backgroundimagepath .'"';
+		$xmlout .= ' imagePath="simpleFlickr.php?mode=img&amp;size=' . $imagesize . '&amp;image="';
+		$xmlout .= ' thumbPath="simpleFlickr.php?mode=img&amp;size=' . $thumbtype . '&amp;image=">';
 		
 		foreach ((array)$photos['photo'] as $photo)
 		{
@@ -1102,28 +1244,53 @@ echo('<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHXwYJ
 				}
 			}
 			
-		   $xmlout .= "<IMAGE><NAME>{$photoName}</NAME><CAPTION>";
-		   if($showimagecaption == 'true')
-		   {
-		      if($showimagelink == 'true')
-		      {
-				if(!empty($group)) 
-				{
-					$xmlout .= "<![CDATA[<a href=\"http://www.flickr.com/photos/{$photo[ownername]}/{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>{$imagelinktext}</u></a>]]>";
-				}
-				else
-				{
-					$xmlout .= "<![CDATA[<a href=\"{$photos_url}{$photo[id]}\" target=\"_blank\">{$photo[title]}<br /><u>{$imagelinktext}</u></a>]]>";
-				}
-			  }
-		      else
-		      {
-		         $xmlout .= "<![CDATA[{$photo[title]}]]>";
-		      }
-		   }
-		   $xmlout .= "</CAPTION></IMAGE>\n";
+            $xmlout .= "<image><filename>{$photoName}</filename><caption><![CDATA[";
+            if($showimagecaption == 'true')
+            {
+                // Check if caption should be a link
+                if($imagecaptionlink == 'true')
+                {
+    				if(!empty($group)) 
+    				{
+    					$html_caption = "<a href=\"http://www.flickr.com/photos/{$photo[ownername]}/{$photo[id]}\" target=\"_blank\">{$photo[title]}</a>";
+    				}
+    				else
+    				{
+    					$html_caption = "<a href=\"{$photos_url}{$photo[id]}\" target=\"_blank\">{$photo[title]}</a>";
+    				}
+                }
+                else
+                {
+                    $html_caption = "{$photo[title]}";
+                }
+                
+                // Set the caption style
+                switch(strtolower($imagecaptionstyle)) {
+        			case "bold":
+        			$tag = "b";
+        			break;
+        			case "italic":
+        			$tag = "i";
+        			break;
+        			case "underline":
+        			$tag = "u";
+        			break;
+        			case "none":
+        			$tag = "";
+        			break;
+        			default:
+        			$tag = "";
+        			break;
+        	   }
+               
+                if(empty($tag))
+                    $xmlout .= $html_caption;
+                else
+                    $xmlout .= "<". $tag .">". $html_caption ."</". $tag .">";  
+            }
+            $xmlout .= "]]></caption></image>";
 		}
-		$xmlout .= "</SIMPLEVIEWER_DATA>";
+		$xmlout .= "</simpleviewergallery>";
 
 		// now return the XML for SimpleViewer
 		header("Content-Type: text/xml");

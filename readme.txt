@@ -3,22 +3,22 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
-Version: 2.5.3
+Version: 3.0
 Author: Josh Gerdes
 Author URI: http://www.joshgerdes.com
 Contributors: joshgerdes
 Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
 Requires at least: 2.0
-Tested up to: 2.5
-Stable tag: 2.5.3
+Tested up to: 2.5.1
+Stable tag: 3.0
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
 == Description ==
 
-This is a plugin for Wordpress that I wrote which allows you to embed a flickr integrated 
-simpleviewer into your Wordpress site.  It is my first attempt at a Wordpress plugin so 
-please let me know if you have any issues using it.  
+This is a plugin for Wordpress that allows you to embed a flickr integrated 
+simpleviewer into your Wordpress site.  In additional, you are able to specific a path 
+to a standard SimpleViewer XML configuration file to display images from a local gallery.  
 
 Please visit [the official website](http://www.joshgerdes.com/projects/simpleflickr-plugin/ "SimpleFlickr") for the latest information on this plugin.
 
@@ -33,6 +33,18 @@ Please visit [the official website](http://www.joshgerdes.com/projects/simplefli
 
 == Frequently Asked Questions ==
 
+= My page/post is blank in Firefox but it is showing up in Internet Explorer.  What gives? =
+
+Please check your height settings for the plugin.  In Firefox a setting of 100% height only works if all parent elements also have height set at 100%.  This seems to be the cause of things showing up blank when viewing a page or post with the plugin.
+
+= I am unable to authorize this plugin with my Flickr account.  What do I do? =
+
+Please read the instructions located on the SimpleFlickr settings page.  The process to authorize this plugin with your Flickr account is straight-forward you just need to follow the instructions.
+
+= How do you get rid of the whitespace? =
+
+This was an issue with the SimpleViewer flash applicaiton and has been resolved as of version 1.8.5.  This version is part of SimpleFlickr version 3.0.
+
 = Where can I get more information? =
 
 Please visit [the official website](http://www.joshgerdes.com/projects/simpleflickr-plugin/ "SimpleFlickr") for the latest information on this plugin.
@@ -46,6 +58,16 @@ Please visit [the official website](http://www.joshgerdes.com/projects/simplefli
 1. An Example of how SimpleFlickr displays in a page or post.
 
 == Release Notes ==
+
+*Version 3.0*:
+
+*  Complete overhaul of the code base.
+*  Upgraded to version 1.8.5 of SimpleViewer flash application.
+*  Upgraded to swfobject 2.0.  This should solve some flash upgrade request issues.
+*  Added ability to set xmldatapath directly for displaying local galleries.
+*  Options added/removed to work with new version of SimpleViewer.
+*  Updated Admin page to have integrated look and feel with Wordpress 2.5+.
+*  HTML output now standards compliant for both page/post output and admin pages.
 
 *Version 2.5.3*:
 
@@ -143,31 +165,97 @@ Here is an example with custom options:
 
 The following are the attributes available for the tag:
 
-*  **showrecent**: Determines if the user's recent photos are displayed by default.  This option takes precedences over the 'set' and 'group' options.  So, if this is set to true then your recent photos will be displayed even if you have added the 'set' or 'group' attribute to the tag.  Default is 'false'. 
-* 	**set**: The set id of the flickr set you would like to display. (Set or Group Required)
-* 	**group**: The group id of the flickr group you would like to display. Go to <http://idgettr.com/> to find a group id needed for this field. (Set or Group Required)
-*  **count**:  The number of images to be displayed.  The maximum number the flickr API allows is 500. (For unlimited set to 0.)  Default is '0'.
-*  **showimagecaption**:  Whether to display the image caption.  Can be "true" or "false".  Default is 'true'.
-*  **showimagelink**:   Whether to display the image link.  The image link is part of the caption so showimagecaption must be 'true' for the image link to be displayed.  Can be "true" or "false". Default is 'true'.
-*  **imagelinktext**:  This is the text to display as a image link. Default is 'View flickr photo page...' 
-* 	**imagesize**: You must provide the size of the image displayed in the simpleviewer flash object. Can be 'Square', 'Thumbnail', 'Small', 'Medium', 'Large', 'Original'. Default is 'Medium'. 
-* 	**privacyfilter**: Determines what photos are displayed based on the level of privacy selected. Values can be 'Public photos', 'Private photos visible to friends', 'Private photos visible to family', 'Private photos visible to friends & family', 'Completely private photos'. Default is 'Public photos'. 
-* 	**width**: The width of the flash object (optional). Default is '100%'.
-* 	**height**: The height of the flash object (optional). Default is '800'.
-* 	**bgcolor**: The background color of the flash object (optional). Default is '#FFFFFF'.
-* 	**bgtransparent**: Whether the background of the flash object is transparent (optional). Overrides background color setting.  Can be "true" or "false".  Default is 'false'.
-* 	**quality**: The quality of the flash object (optional). Default is 'best'.
-* 	**navPosition**: Position of thumbnails relative to image. Can be "top", "bottom", "left" or "right". Default is 'bottom'.
-* 	**title**: Text to display as gallery Title.  Default is blank.
-* 	**maximagewidth**: Width of your largest image in pixels. Used to determine the best layout for your gallery.  Default is '500'.
-* 	**maximageheight**: Height of your largest image in pixels. Used to determine the best layout for your gallery.  Default is '300'.
-* 	**textcolor**: Color of title and caption text (hexidecimal color value e.g 0xff00ff).  Default is '0x000000'.
-* 	**framecolor**: Color of image frame, navigation buttons and thumbnail frame (hexidecimal color value e.g 0xff00ff).  Default is '0xBBBBBB'.
-* 	**framewidth**: Width of image frame in pixels.  Default is '15'.
-* 	**stagepadding**: Distance between image and thumbnails and around gallery edge in pixels.  Default is '40'.
-* 	**thumbnailcolumns**: Number of thumbnail rows. (To disable thumbnails completely set this value to 0.)  Default is '3'.
-* 	**thumbnailrows**: Number of thumbnail columns. (To disable thumbnails completely set this value to 0.)  Default is '3'.
-* 	**enablerightclickopen**: Whether to display a 'Open In new Window...' dialog when right-clicking on an image. Can be "true" or "false". Default is 'true'. 
+**Flickr Options**
+
+The following options are related to how the plugin accesses and retrieves images from flickr.
+
+* 	**Photo Count (count)** 	
+The number of images to be displayed. The maximum number the flickr API allows is 500. For unlimited set to '0'. Default is '0'.
+* 	**Show Recent Photos (showrecent)** 	
+Determines the user's recent photos are displayed by default. This option takes precedences over the 'set' and 'group' options. So, if this is set to true then your recent photos will be displayed even if you have added the 'set' or 'group' attribute to the tag. Default is 'false'.
+* 	**Image Size (imagesize)** 	
+You must provide the size of the image displayed in the simpleviewer flash object. Can be 'Square', 'Thumbnail', 'Small', 'Medium', 'Large', 'Original'. Default is 'Medium'.
+* 	**Privacy Filter (privacyfilter)** 	
+Determines what photos are displayed based on the level of privacy selected. Values can be 'Public photos', 'Private photos visible to friends', 'Private photos visible to family', 'Private photos visible to friends & family', 'Completely private photos'. Default is 'Public photos'.
+
+**Flash Object Options**
+
+The following options are general options related to the flash object displayed by this plugin.
+
+* 	**Width (width)** 	
+Specifies the width of the movie in either pixels or percentage of browser window. Default is '480'.
+* 	**Height (height)** 	
+Specifies the height of the movie in either pixels or percentage of browser window. Default is '680'.
+* 	**Quality (quality)** 	
+Specifies the quality of the simpleviewer flash object. Can be 'low', 'high', 'autolow', 'autohigh', 'best'. Default is 'best'.
+* 	**Background Color (bgcolor)** 	
+Specifies the background color (hexidecimal color value e.g #FF00FF) of the movie. This attribute does not affect the background color of the HTML page. Default is #FFFFFF. Is ignored if Window Mode is set to 'transparent'.
+* 	**Window Mode (wmode)** 	
+Sets the Window Mode property of the Flash movie for transparency, layering, and positioning in the browser. Can be 'window', 'opaque', 'transparent'. Default is 'window'. Overrides Background Color if set to 'transparent'.
+
+**SimpleViewer Options**
+
+This plugin uses the SimpleViewer flash application for displaying images from Flickr. SimpleViewer can be customized by setting the following options. Please visit the SimpleViewer Options Page for more details.
+
+* 	**Max Image Width (maximagewidth)** 	
+Width of the widest image in the gallery. Used to determine the best layout for your gallery (pixels). Default is '480'.
+* 	**Max Image Height (maximageheight)** 	
+Height of tallest image in the gallery. Used to determine the best layout for your gallery (pixels). Default is '680'.
+* 	**Text Color (textcolor)** 	
+Color of title and caption text (hexidecimal color e.g. 0xFF00FF). Default is '0xFFFFFF'.
+* 	**Frame Color (framecolor)** 	
+Color of image frame, navigation buttons and thumbnail frame (hexidecimal color value e.g. 0xFF00FF). Default is '0xFFFFFF'.
+* 	**Frame Width (framewidth)** 	
+Width of image frame (pixels). Default is '20'.
+* 	**Stage Padding (stagepadding)** 	
+Width of padding around gallery edge (pixels). To have the image flush to the edge of the swf, set this to '0'. Default is '40'.
+* 	**Nav Padding (navpadding)** 	
+Distance between image and thumbnails (pixels). Default is '40'.
+* 	**Thumbnail Columns (thumbnailcolumns)** 	
+Number of thumbnail columns. To disable thumbnails completely set this value to '0'. Default is '3'.
+* 	**Thumbnail Rows (thumbnailrows)** 	
+Number of thumbnail rows. To disable thumbnails completely set this value to '0'. Default is '3'.
+* 	**Nav Position (navposition)** 	
+Position of thumbnails relative to image. Can be 'top', 'bottom', 'left' or 'right'. Default is 'left'.
+* 	**Vertical Alignment (valign)** 	
+Vertical placment of the image and thumbnails within the SWF. Can be 'center', 'top' or 'bottom'. Default is 'center'.
+For large format galleries this is best set to 'center'. For small format galleries setting this to 'top' or 'bottom' can help get the image flush to the edge of the swf.
+* 	**Horizontal Alignment (halign)** 	
+Horizontal placement of the image and thumbnails within the SWF. Can be 'center', 'left' or 'right'. Default is 'center'.
+For large format galleries this is best set to 'center'. For small format galleries setting this to 'left' or 'right' can help get the image flush to the edge of the swf.
+* 	**Title (title)** 	
+Text to display as gallery Title. Default is blank.
+* 	**Enable Right Click Open (enablerightclickopen)** 	
+Whether to display a 'Open In new Window...' dialog when right-clicking on an image. Can be 'true' or 'false'. Default is 'true'.
+* 	**Background Image Path (backgroundimagepath)** 	
+Relative or absolute path to a JPG or SWF to load as the gallery background. Default is blank.
+Relative paths are relative to the HTML document that contains SimpleViewer. For example: 'images/bkgnd.jpg'.
+* 	**First Image Index (firstimageindex)** 	
+Index of image to display when gallery loads. Images are numbered beginning at zero. You can use this option to display a specific number based on the URL. Default is '0'.
+* 	**Open Image Text (langopenimage)** 	
+The text displayed for the right-click 'Open Image in New Window' menu option. Can be used to translate SimpleViewer into a non-English language. Default is 'Open Image in New Window'.
+* 	**About Text (langabout)** 	
+The text displayed for the right-click 'About' menu option. Can be used to translate SimpleViewer into a non-English language. Default is 'About'.
+* 	**Preloader Color (preloadercolor)** 	
+Preloader color (hexidecimal color value). Default is '0xFFFFFF'.
+
+**Additional Options**
+
+The following are additional options to control how SimpleViewer displays images within this plugin.
+
+* 	**Show Image Caption (showimagecaption)** 	
+Specifies if the image caption is displayed. Can be 'true' or 'false'. Default is 'true'.
+* 	**Image Caption Link (imagecaptionlink)** 	
+Specifies if the image caption text is a link to the flickr image page. Can be 'true' or 'false'. Default is 'true'.
+* 	**Image Caption Style (imagecaptionstyle)** 	
+Specifies the font style for the image caption text if displayed. Can be 'bold', 'italic', 'underline', or 'none'. Default is 'none'.
+
+**Alternate SimpleViewer Options**
+
+The following is an alternate option for using SimpleViewer within this plugin. If you provide a path to a standard SimpleViewer XML configuration file then this plugin will display the gallery and all settings specified in that file. This option overrides all other Simpleviewer options set for this plugin.
+
+* 	**XML Configuration File Path (xmldatapath)** 	
+Relative or absolute URL of the gallery XML file. Relative paths are relative to the HTML page that contains the swf. Default is blank.
 
 == Special Thanks ==
 
