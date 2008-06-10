@@ -4,14 +4,14 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
-Version: 3.0
+Version: 3.0.2
 Author: Josh Gerdes
 Author URI: http://www.joshgerdes.com
 Contributors: joshgerdes
 Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
 Requires at least: 2.0
 Tested up to: 2.5.1
-Stable tag: 3.0
+Stable tag: 3.0.2
 
 Copyright (c) 2007-2008
 Released under the GPL license
@@ -22,7 +22,7 @@ http://www.gnu.org/licenses/gpl.txt
 if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFlickr.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "3.0");
+define('SIMPLEFLICKR_VERSION', "3.0.2");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
@@ -408,16 +408,16 @@ class SimpleFlickrPlugin {
         if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
         $html_flickroptions[] = $option .'>Public photos</option>'; 
         $option = '    <option value="2"'; 
-        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        if($simpleflickr_privacyfilter=='2')	$option .= ' selected="selected"';
         $html_flickroptions[] = $option .'>Private photos visible to friends</option>'; 
         $option = '    <option value="3"'; 
-        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        if($simpleflickr_privacyfilter=='3')	$option .= ' selected="selected"';
         $html_flickroptions[] = $option .'>Private photos visible to family</option>'; 
         $option = '    <option value="4"'; 
-        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        if($simpleflickr_privacyfilter=='4')	$option .= ' selected="selected"';
         $html_flickroptions[] = $option .'>Private photos visible to friends &amp; family</option>'; 	
         $option = '    <option value="5"'; 
-        if($simpleflickr_privacyfilter=='1')	$option .= ' selected="selected"';
+        if($simpleflickr_privacyfilter=='5')	$option .= ' selected="selected"';
         $html_flickroptions[] = $option .'>Completely private photos</option>'; 
         $html_flickroptions[] = '</select>'; 
         $html_flickroptions[] = '<br />'; 
@@ -871,10 +871,6 @@ class SimpleFlickrPlugin {
 			$atts[$attn]	= $attv;
 		}
 
-		// Adjust for percentage heights
-		$atts['height']				= ($height{strlen($atts['height']) - 1} == "%") ? '"' . $atts['height'] . '"' : $atts['height'];
-		$atts['width']				= ($width{strlen($atts['width']) - 1} == "%") ? '"' . $atts['width'] . '"' : $atts['width'];
-			
 		// If we're not serving up a feed, generate the script tags
 		if (is_feed()) {
             $ret = $this->build_feed($atts);
@@ -894,15 +890,15 @@ class SimpleFlickrPlugin {
 		// Extract out all of the option variables
 		if (is_array($atts)) extract($atts);
 
-		// Get the default values for some of the tags
+		// Get the saved values for some of the tags
 		$simpleFlickrOptionsDB = get_option(SIMPLEFLICKR_OPTIONS_NAME);
-        $xmldatapath = $simpleFlickrOptionsDB['XML_DATA_PATH'];
-        $width = $simpleFlickrOptionsDB['WIDTH'];
-        $height = $simpleFlickrOptionsDB['HEIGHT'];
-        $quality = $simpleFlickrOptionsDB['QUALITY'];
-        $bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
-        $wmode = $simpleFlickrOptionsDB['WMODE'];
-        
+        if(empty($xmldatapath)) $xmldatapath = $simpleFlickrOptionsDB['XML_DATA_PATH'];
+        if(empty($width))       $width = $simpleFlickrOptionsDB['WIDTH'];
+        if(empty($height))      $height = $simpleFlickrOptionsDB['HEIGHT'];
+        if(empty($quality))     $quality = $simpleFlickrOptionsDB['QUALITY'];
+        if(empty($bgcolor))     $bgcolor = $simpleFlickrOptionsDB['BGCOLOR'];
+        if(empty($wmode))       $wmode = $simpleFlickrOptionsDB['WMODE'];
+
 		// Load some defaults if value not given
 		if(empty($width))	    $width = SIMPLEFLICKR_DEFAULT_WIDTH; 
 		if(empty($height))	    $height = SIMPLEFLICKR_DEFAULT_HEIGHT;

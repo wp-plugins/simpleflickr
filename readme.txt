@@ -3,14 +3,14 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
-Version: 3.0
+Version: 3.0.2
 Author: Josh Gerdes
 Author URI: http://www.joshgerdes.com
 Contributors: joshgerdes
 Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
 Requires at least: 2.0
 Tested up to: 2.5.1
-Stable tag: 3.0
+Stable tag: 3.0.2
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 
@@ -58,6 +58,11 @@ Please visit [the official website](http://www.joshgerdes.com/projects/simplefli
 1. An Example of how SimpleFlickr displays in a page or post.
 
 == Release Notes ==
+
+*Version 3.0.2*:
+
+*  Fixed privacy filter option selection bug.
+*  Fixed width and height parameter bug.
 
 *Version 3.0*:
 
