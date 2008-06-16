@@ -4,14 +4,14 @@ Plugin Name: SimpleFlickr
 Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
-Version: 3.0.2
+Version: 3.0.3
 Author: Josh Gerdes
 Author URI: http://www.joshgerdes.com
 Contributors: joshgerdes
 Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
 Requires at least: 2.0
 Tested up to: 2.5.1
-Stable tag: 3.0.2
+Stable tag: 3.0.3
 
 Copyright (c) 2007-2008
 Released under the GPL license
@@ -22,7 +22,7 @@ http://www.gnu.org/licenses/gpl.txt
 if(!class_exists("phpflickr"))	require_once(dirname(__FILE__)."/phpFlickr/phpFlickr.php");
 
 // Global Variables and Defaults
-define('SIMPLEFLICKR_VERSION', "3.0.2");
+define('SIMPLEFLICKR_VERSION', "3.0.3");
 define('SIMPLEFLICKR_FLICKR_API_KEY', "97bb421765f720bd26faf71778cb51e6");
 define('SIMPLEFLICKR_FLICKR_API_SECRET', "f0036586d57895e7");
 define('SIMPLEFLICKR_OPTIONS_NAME', "simpleflickr_options");
@@ -1165,35 +1165,35 @@ class SimpleFlickrPlugin {
 		$xmlout = '<?xml version="1.0" encoding="UTF-8"?>';
 		$xmlout .= '<!-- Last updated: ' . date("r") . ' -->';
 		$xmlout .= '<simpleviewergallery ';
-        if(!empty($maximagewidth))
+        if(strlen($maximagewidth))
             $xmlout .= ' maxImageWidth="'. $maximagewidth .'"';
-        if(!empty($maximageheight))
+        if(strlen($maximageheight))
             $xmlout .= ' maxImageHeight="'. $maximageheight .'"';
-        if(!empty($textcolor))
+        if(strlen($textcolor))
             $xmlout .= ' textColor="'. $textcolor .'"';
-        if(!empty($framecolor))
+        if(strlen($framecolor))
             $xmlout .= ' frameColor="'. $framecolor .'"';
-        if(!empty($framewidth))
+        if(strlen($framewidth))
             $xmlout .= ' frameWidth="'. $framewidth .'"';
-        if(!empty($stagepadding))
+        if(strlen($stagepadding))
             $xmlout .= ' stagePadding="'. $stagepadding .'"';
-        if(!empty($navpadding))
+        if(strlen($navpadding))
             $xmlout .= ' navPadding="'. $navpadding .'"';
-        if(!empty($thumbnailcolumns))
+        if(strlen($thumbnailcolumns))
             $xmlout .= ' thumbnailColumns="'. $thumbnailcolumns .'"';
-        if(!empty($thumbnailrows))
+        if(strlen($thumbnailrows))
             $xmlout .= ' thumbnailRows="'. $thumbnailrows .'"';
-        if(!empty($navposition))
+        if(strlen($navposition))
             $xmlout .= ' navPosition="'. $navposition .'"';
-        if(!empty($valign))
+        if(strlen($valign))
             $xmlout .= ' vAlign="'. $valign .'"';
-        if(!empty($halign))
+        if(strlen($halign))
             $xmlout .= ' hAlign="'. $halign .'"';
-        if(!empty($title))
+        if(strlen($title))
             $xmlout .= ' title="'. $title .'"';
-        if(!empty($enablerightclickopen))
+        if(strlen($enablerightclickopen))
             $xmlout .= ' enableRightClickOpen="'. $enablerightclickopen .'"';
-        if(!empty($backgroundimagepath))
+        if(strlen($backgroundimagepath))
             $xmlout .= ' backgroundImagePath="'. $backgroundimagepath .'"';
 		$xmlout .= ' imagePath="simpleFlickr.php?mode=img&amp;size=' . $imagesize . '&amp;image="';
 		$xmlout .= ' thumbPath="simpleFlickr.php?mode=img&amp;size=' . $thumbtype . '&amp;image=">';
