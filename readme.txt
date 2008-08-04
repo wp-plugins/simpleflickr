@@ -1,7 +1,7 @@
 === SimpleFlickr ===
 Plugin Name: SimpleFlickr
-Plugin URI: http://www.joshgerdes.com/projects/simpleflickr-plugin/
-Donate link: http://www.joshgerdes.com/projects/simpleflickr-plugin/
+Plugin URI: http://wordpress.org/extend/plugins/simpleflickr/
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=joshgerdes%40gmail%2ecom&item_name=SimpleFlickr%20Wordpress%20Plugin%20Donation&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8
 Description: This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
 Version: 3.0.3
 Author: Josh Gerdes
@@ -9,7 +9,7 @@ Author URI: http://www.joshgerdes.com
 Contributors: joshgerdes
 Tags: flickr, simpleviewer, gallery, images, image, simpleflickr, photos, photo
 Requires at least: 2.0
-Tested up to: 2.5.1
+Tested up to: 2.6.1
 Stable tag: 3.0.3
 
 This plugin allows you to embed a Simpleviewer Flash Object integrated with a Flickr account.
@@ -19,8 +19,6 @@ This plugin allows you to embed a Simpleviewer Flash Object integrated with a Fl
 This is a plugin for Wordpress that allows you to embed a flickr integrated 
 simpleviewer into your Wordpress site.  In additional, you are able to specific a path 
 to a standard SimpleViewer XML configuration file to display images from a local gallery.  
-
-Please visit [the official website](http://www.joshgerdes.com/projects/simpleflickr-plugin/ "SimpleFlickr") for the latest information on this plugin.
 
 == Installation ==
 
